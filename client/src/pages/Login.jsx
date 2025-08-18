@@ -1,6 +1,7 @@
 import React from 'react'
 import {assets} from '../assets/assets'
 import { Star } from 'lucide-react'
+import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react';
 
 const Login = () => {
   return (
@@ -21,7 +22,22 @@ const Login = () => {
               <p>User by 12k+ developers</p>
             </div>
           </div>
+          <h1 className='text-3xl md:text-6xl md:pb-2 font-bold bg-gradient-to-r from-indigo-950 to-indigo-800 bg-clip-text text-transparent'>More than just friends truly connect</h1>
+          <p className='text-xl md:text-3xl text-indigo-900 max-w-72 md:max-w-md'>connect with global community on Chattrix</p>
         </div>
+        <span className='md:h-10'></span>
+      </div>
+      
+      {/* right side: login form */}
+      <div className='flex-1 flex items-center justify-center p-6 sm:p-10'>
+        <header>
+      <SignedOut>
+        <SignInButton />
+      </SignedOut>
+      <SignedIn>
+        <UserButton />
+      </SignedIn>
+    </header>
       </div>
     </div>
   )
