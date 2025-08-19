@@ -1,5 +1,6 @@
-import { ArrowLeft, TextIcon } from 'lucide-react';
+import { ArrowLeft, Sparkle, TextIcon, Upload } from 'lucide-react';
 import React from 'react'
+import toast from 'react-hot-toast';
 
 const StoryModel = ({setShowModal, fetchStories}) => {
     const bgColor = ['#4f46ef', '#7c3aed', '#db2777', '#e11d48', '#ca8a04', '#0d9488'];
@@ -72,10 +73,24 @@ const StoryModel = ({setShowModal, fetchStories}) => {
         </div>
 
         <div className='flex gap-2 mt-4'>
-            <button className={`flex-1 flex items-center justify-center gap-2 p-2 rounded ${mode === 'text' ? "bg-white text-black" : "bg-zinc-800"}`} onClick={() => {setMode('text'); setMedia(null); setPreviewUrl(null);}}>
+            <button className={`flex-1 flex items-center justify-center gap-2 p-2 rounded cursor-pointer ${mode === 'text' ? "bg-white text-black" : "bg-zinc-800"}`} onClick={() => {setMode('text'); setMedia(null); setPreviewUrl(null);}}>
                 <TextIcon size={18} /> Text
             </button>
+            <label className={`flex-1 flex items-center justify-center gap-2 p-2 rounded cursor-pointer ${mode === 'media' ? 'bg-white text-black' : 'bg-zinc-800'}`} htmlFor="media-upload">
+                <input type="file" name="" id="media-upload" accept='image/*,video/*' onChange={(e) => {handleMediaUpload(e); setMode('media')}} className='hidden' />
+                <Upload size={18} /> Photo / Video
+            </label>
         </div>
+
+        {/* upload button */}
+        {/* notification */}
+        <button className='flex items-center justify-center gap-2 text-white py-3 mt-4 w-full rounded bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 active:scale-95 transition cursor-pointer' onClick={() => toast.promise(handleCreateStory(), {
+            loading: 'Creating story...',
+            success: <p>Story added</p>,
+            error: e => <p>Error adding story: {e.message}</p>
+        })}>
+            <Sparkle size={18} /> Create Story
+        </button>
       </div>
     </div>
   )
