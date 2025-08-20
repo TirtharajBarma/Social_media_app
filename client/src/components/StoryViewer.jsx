@@ -5,6 +5,7 @@ const StoryViewer = ({ viewStory, setViewStory }) => {
 
     const [progress, setProgress] = React.useState(0);
 
+    // This allows to view the story in a modal in progression
     useEffect(() => {
         let timer, progressInterval;
 
