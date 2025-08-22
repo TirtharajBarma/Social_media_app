@@ -1,6 +1,9 @@
 import React, { useEffect, useState, useRef } from 'react'
 import { dummyMessagesData, dummyUserData } from '../assets/assets'
 import { ImageIcon, SendHorizonal } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
 
 const ChatBox = () => {
   const messages = dummyMessagesData;
@@ -13,14 +16,33 @@ const ChatBox = () => {
     // Handle sending message logic here
   };
 
+  const navigate = useNavigate();
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  const handleBack = () => {
+    if (window.history.state && window.history.state.idx > 0) {
+      navigate(-1);
+    } else {
+      navigate('/messages'); // fallback route
+    }
+  };
+
   return user && (
     <div className="flex flex-col h-screen">
+
+      
       {/* top bar */}
       <div className="flex items-center gap-2 p-2 md:px-10 xl:pl-42 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-gray-300">
+        {/* Back Button */}
+        <ArrowLeft
+          className="w-6 h-6 text-gray-700 cursor-pointer hover:text-indigo-600"
+          onClick={handleBack} // Go back to previous page
+        />
+
+        {/* Profile Image */}
         <img src={user.profile_picture} alt="" className="size-8 rounded-full" />
         <div>
           <p className="font-medium">{user.full_name}</p>
