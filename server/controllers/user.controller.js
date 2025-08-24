@@ -1,4 +1,5 @@
 import imageKit from "../config/imageKit.js";
+import Connection from "../models/connection.models.js";
 import User from "../models/user.models.js";
 import fs from 'fs';
 
@@ -180,5 +181,107 @@ export const unfollowUser = async(req, res) => {
     } catch (error) {
         console.error('Error unfollowing user:', error);
         return res.json({ success: false, message: error.message });
+    }
+}
+
+// Send Connection Request
+export const sendConnectionRequest = async (req, res) => {
+    try {
+        // it will get req. id from user and body
+        const { userId } = req.auth();
+        const { id } = req.body;
+
+        // check if user has sent more than 20 req in last 24hr
+        const last24hrs = new Date(Date.now() - 24*60*60*1000);
+        const connectionRequest = await Connection.find({
+            from_user_id: userId,
+            createdAt: { $gte: last24hrs }
+        });
+
+        if (connectionRequest.length >= 20) {
+            return res.json({ success: false, message: 'You have reached the limit of 20 connection requests in the last 24 hours' });
+        }
+
+        // check user is already connected
+        const isConnected = await Connection.findOne({
+            $or: [
+                { from_user_id: userId, to_user_id: id },
+                { from_user_id: id, to_user_id: userId }
+            ],
+            status: 'accepted'
+        });
+
+        if (!isConnected) {
+            // Create a new connection request
+            await Connection.create({
+                from_user_id: userId,
+                to_user_id: id,
+            });
+            res.json({ success: true, message: 'Connection request sent successfully' });
+        }
+        else if(isConnected && isConnected.status === 'accepted') {
+            return res.json({ success: false, message: 'You are already connected with this user' });
+        }
+        return res.json({ success: false, message: 'Connection request already sent' });
+
+    } catch (error) {
+        console.error('Error sending connection request:', error);
+        res.json({ success: false, message: error.message });
+    }
+}
+
+// get user connections
+export const getUserConnections = async (req, res) => {
+    try {
+        const { userId } = req.auth();
+        const user = await User.findById(userId).populate('connection followers following');
+
+        const connections = user.connection;
+        const followers = user.followers;
+        const following = user.following;
+
+        const pendingConnections = (await Connection.find({ to_user_id: userId, status: 'pending' }).populate('from_user_id')).map(conn => conn.from_user_id);
+
+        res.json({ success: true, connections, followers, following, pendingConnections });
+    } catch (error) {
+        console.error('Error getting user connections:', error);
+        res.json({ success: false, message: error.message });
+    }
+}
+
+// accept user connections
+export const acceptConnectionRequest = async (req, res) => {
+    try {
+        const { userId } = req.auth();
+        const { id } = req.body;
+
+        // Check if the connection request exists
+        const connectionRequest = await Connection.findOne({
+            from_user_id: id,
+            to_user_id: userId,
+        });
+
+        if (!connectionRequest) {
+            return res.json({ success: false, message: 'Connection request not found' });
+        }
+
+        // Update the user's connections
+        const user = await User.findById(userId);
+        user.connection.push(id);
+        await user.save();
+
+        // update the toUser's connections
+        const toUser = await User.findById(id);
+        toUser.connection.push(userId);
+        await toUser.save();
+
+        // Accept the connection request
+        connectionRequest.status = 'accepted';
+        await connectionRequest.save();
+
+        res.json({ success: true, message: 'Connection request accepted successfully' });
+    } catch (error) {
+        console.error('Error accepting connection request:', error);
+        res.json({ success: false, message: error.message });
     }
 }
