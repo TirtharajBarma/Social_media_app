@@ -219,6 +219,7 @@ export const sendConnectionRequest = async (req, res) => {
             const newConnection = await Connection.create({
                 from_user_id: userId,
                 to_user_id: id,
+                // status: 'pending' -> by default
             });
 
             // trigger inngest function
@@ -269,8 +270,9 @@ export const acceptConnectionRequest = async (req, res) => {
 
         // Check if the connection request exists
         const connectionRequest = await Connection.findOne({
-            from_user_id: id,
-            to_user_id: userId,
+            from_user_id: id,   // Original sender
+            to_user_id: userId, // Current user (recipient)
+            // status: 'pending' -> by default
         });
 
         if (!connectionRequest) {
@@ -287,7 +289,7 @@ export const acceptConnectionRequest = async (req, res) => {
         toUser.connection.push(userId);
         await toUser.save();
 
-        // Accept the connection request
+        // CRITICAL: Update status to 'accepted'
         connectionRequest.status = 'accepted';
         await connectionRequest.save();
 

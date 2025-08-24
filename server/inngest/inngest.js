@@ -113,6 +113,7 @@ const sendConnectionRequestReminder = inngest.createFunction(
     await step.run('send-connection-request-reminder', async() => {
       const connection = await Connection.findById(connectionId).populate('from_user_id to_user_id');
       
+      // CHECK: Has the status changed from 'pending' to 'accepted'?
       if(connection.status === 'accepted'){
         return {message: 'accepted'};
       }
@@ -125,6 +126,8 @@ const sendConnectionRequestReminder = inngest.createFunction(
         </div>
       `
 
+      // If we reach here, status is still 'pending'
+      // Send reminder email...
       await sendEmail({
         to: connection.to_user_id.email,
         subject,
