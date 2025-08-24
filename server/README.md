@@ -22,14 +22,31 @@ A comprehensive social media platform backend built with Node.js, Express, Mongo
 - **Feed Generation**: Personalized feed based on connections and followings
 - **Like System**: Like/unlike posts with real-time updates
 
-### 📧 Email System
+### � Real-Time Messaging
+- **Direct Messaging**: Send text and image messages between users
+- **Server-Sent Events (SSE)**: Real-time message delivery without WebSocket overhead
+- **Message Status**: Read receipts and seen indicators
+- **Media Support**: Image messages with automatic optimization
+- **Recent Messages**: Inbox functionality with conversation previews
+
+### 📸 Stories System
+- **Story Creation**: Text, image, and video stories with custom backgrounds
+- **Auto-Delete**: Stories automatically expire after 24 hours
+- **Story Feed**: View stories from connections and followers
+- **View Tracking**: Track who viewed your stories
+- **Background Jobs**: Automatic cleanup using Inngest
+
+### 📧 Email & Notifications
 - **SMTP Integration**: Brevo (SendinBlue) SMTP service
-- **Automated Notifications**: Connection request notifications
+- **Connection Notifications**: Automated email notifications for connection requests
+- **Unseen Messages Alert**: Daily email digest for unread messages
 - **HTML Templates**: Rich email templates with styling
 
 ### 🔄 Background Jobs
 - **Inngest Integration**: Event-driven background job processing
 - **Webhook Handling**: Clerk webhook processing for user sync
+- **Story Cleanup**: Automatic story deletion after 24 hours
+- **Email Automation**: Scheduled notifications and reminders
 - **Automatic Sync**: Real-time user data synchronization
 
 ## 🛠 Tech Stack
@@ -38,6 +55,7 @@ A comprehensive social media platform backend built with Node.js, Express, Mongo
 - **Framework**: Express.js
 - **Database**: MongoDB with Mongoose ODM
 - **Authentication**: Clerk
+- **Real-time Communication**: Server-Sent Events (SSE)
 - **Image Processing**: ImageKit
 - **File Upload**: Multer
 - **Email Service**: Nodemailer + Brevo SMTP
@@ -55,16 +73,22 @@ server/
 │   └── nodeMailer.js      # Email configuration
 ├── controllers/
 │   ├── user.controller.js # User management logic
-│   └── post.controller.js # Post management logic
+│   ├── post.controller.js # Post management logic
+│   ├── message.controller.js # Real-time messaging logic
+│   └── story.controller.js # Story management logic
 ├── middleware/
 │   └── auth.js           # Authentication middleware
 ├── models/
 │   ├── user.models.js    # User schema
 │   ├── post.models.js    # Post schema
-│   └── connection.models.js # Connection schema
+│   ├── connection.models.js # Connection schema
+│   ├── messages.model.js # Message schema
+│   └── story.models.js   # Story schema
 ├── routes/
 │   ├── user.routes.js    # User API routes
-│   └── post.routes.js    # Post API routes
+│   ├── post.routes.js    # Post API routes
+│   ├── message.route.js  # Messaging API routes
+│   └── story.route.js    # Story API routes
 ├── inngest/
 │   └── inngest.js        # Background job functions
 ├── server.js             # Main application entry
@@ -129,7 +153,35 @@ npm run dev
 
 The server will start on `http://localhost:4000`
 
-## 📚 API Documentation
+## � Real-Time Architecture
+
+### Server-Sent Events (SSE) Implementation
+This application uses **Server-Sent Events** instead of WebSockets for real-time messaging, providing:
+
+- **Lightweight Communication**: HTTP-based, no additional protocol overhead
+- **Automatic Reconnection**: Browser handles reconnection automatically
+- **Firewall Friendly**: Works through corporate proxies and firewalls
+- **One-Way Optimal**: Perfect for message notifications (server → client)
+
+### SSE Connection Flow
+```javascript
+// Client establishes SSE connection
+GET /api/messages/:userId
+
+// Server maintains connection pool
+connections[userId] = responseObject;
+
+// Real-time message delivery
+connections[recipientId].write(`data: ${JSON.stringify(message)}\n\n`);
+```
+
+### Why SSE over Socket.io?
+1. **Simpler Architecture**: No complex bidirectional protocol needed
+2. **Better Performance**: Lower overhead for message notifications
+3. **Native Browser Support**: No additional client libraries required
+4. **HTTP/2 Compatible**: Works seamlessly with modern HTTP infrastructure
+
+## �📚 API Documentation
 
 ### Authentication
 All protected routes require a Bearer token in the Authorization header.
@@ -251,6 +303,66 @@ Content-Type: application/json
 }
 ```
 
+### Message Routes (`/api/messages`)
+
+#### Establish SSE Connection (Real-time)
+```http
+GET /api/messages/:userId
+```
+*Note: This creates a Server-Sent Events connection for real-time message delivery*
+
+#### Send Message
+```http
+POST /api/messages/send
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+
+{
+  "to_user_id": "string",
+  "text": "string",
+  "image": "file" (optional)
+}
+```
+
+#### Get Chat Messages
+```http
+POST /api/messages/get
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "to_user_id": "user_id"
+}
+```
+
+#### Get Recent Messages (Inbox)
+```http
+GET /api/messages/recent/:userId
+Authorization: Bearer <token>
+```
+
+### Story Routes (`/api/stories`)
+
+#### Create Story
+```http
+POST /api/stories/create
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+
+{
+  "content": "string",
+  "media_type": "text|image|video",
+  "background_color": "string",
+  "media": "file" (for image/video)
+}
+```
+
+#### Get Stories Feed
+```http
+GET /api/stories/get
+Authorization: Bearer <token>
+```
+
 ## 🗄 Database Schemas
 
 ### User Schema
@@ -296,6 +408,34 @@ Content-Type: application/json
 }
 ```
 
+### Message Schema
+```javascript
+{
+  from_user_id: String,           // Sender user ID (ref: User)
+  to_user_id: String,             // Recipient user ID (ref: User)
+  text: String,                   // Message content
+  message_type: String,           // "text"|"image"
+  media_url: String,              // ImageKit URL for images
+  seen: Boolean,                  // Read receipt (default: false)
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+### Story Schema
+```javascript
+{
+  user: String,                   // Story owner user ID (ref: User)
+  content: String,                // Text content
+  media_url: [String],            // Media URLs from ImageKit
+  media_type: String,             // "text"|"image"|"video"
+  views_count: [String],          // Array of user IDs who viewed
+  background_color: String,       // Background color for text stories
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
 ## 🔄 Background Jobs (Inngest)
 
 ### User Sync Functions
@@ -306,6 +446,16 @@ Content-Type: application/json
 ### Email Notification System
 - **Connection Request**: Sends immediate notification email
 - **24-hour Reminder**: Sends reminder if request still pending
+- **Unseen Messages**: Daily email digest for unread messages (9 AM cron job)
+
+### Story Management
+- **Auto-Delete Stories**: Removes stories after exactly 24 hours
+- **Scheduled Cleanup**: Background job triggered when story is created
+
+### Real-Time Features
+- **SSE Connection Management**: Handles user online/offline status
+- **Message Broadcasting**: Delivers messages instantly to online users
+- **Connection Pooling**: Maintains active SSE connections efficiently
 
 ## 🚀 Deployment
 
@@ -328,10 +478,13 @@ vercel
 ## 🔒 Security Features
 
 - **Rate Limiting**: Connection request limits (20/24hrs)
-- **Authentication**: Clerk JWT token verification
-- **File Upload Security**: Multer file validation
-- **CORS**: Cross-origin resource sharing enabled
+- **Authentication**: Clerk JWT token verification on all protected routes
+- **File Upload Security**: Multer file validation and size limits
+- **CORS**: Cross-origin resource sharing enabled for frontend
 - **Environment Variables**: Sensitive data protection
+- **SSE Security**: User-specific connections with automatic cleanup
+- **Image Validation**: File type and size validation for uploads
+- **SQL Injection Prevention**: Mongoose ODM provides built-in protection
 
 ## 🧪 Testing
 
@@ -356,10 +509,13 @@ Content-Type: application/json
 - **Data Validation**: Mongoose schema validation
 
 ### Performance Optimizations
-- **Image Optimization**: ImageKit automatic compression
+- **Image Optimization**: ImageKit automatic compression and WebP conversion
 - **Database Indexing**: MongoDB indexes on frequently queried fields
-- **Populate Optimization**: Selective field population
+- **Populate Optimization**: Selective field population for better query performance
 - **CDN**: ImageKit global CDN for image delivery
+- **SSE Efficiency**: Lightweight real-time communication without WebSocket overhead
+- **Background Processing**: CPU-intensive tasks handled by Inngest
+- **Connection Pooling**: MongoDB connection pooling for better performance
 
 ## 🤝 Contributing
 
@@ -375,6 +531,34 @@ For issues and questions:
 - Create an issue in the repository
 - Check the documentation
 - Review the error logs in console
+
+## 🌟 Feature Summary
+
+This social media backend provides a **complete Instagram/LinkedIn hybrid experience**:
+
+### 📱 **Core Social Features**
+- ✅ User profiles with image uploads
+- ✅ Follow/unfollow relationships
+- ✅ Professional connection requests
+- ✅ Post creation with media support
+- ✅ Real-time messaging system
+- ✅ Story system with auto-expiry
+
+### 🚀 **Advanced Functionality**
+- ✅ Real-time notifications via SSE
+- ✅ Background job processing
+- ✅ Email notification system
+- ✅ Image optimization and CDN
+- ✅ Rate limiting and security
+- ✅ Webhook integration with Clerk
+
+### 🏗️ **Production-Ready Architecture**
+- ✅ Scalable microservice design
+- ✅ Event-driven background processing
+- ✅ Optimized database queries
+- ✅ Comprehensive error handling
+- ✅ Security best practices
+- ✅ Cloud deployment ready
 
 ---
 

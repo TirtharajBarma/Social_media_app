@@ -2,6 +2,7 @@ import { Inngest } from "inngest";
 import User from "../models/user.models.js";
 import Connection from "../models/connection.models.js";
 import sendEmail from "../config/nodeMailer.js";
+import Message from "../models/messages.model.js";
 
 export const inngest = new Inngest({
   id: "social_media"
@@ -135,4 +136,71 @@ const sendConnectionRequestReminder = inngest.createFunction(
   }
 );
 
-export const functions = [syncUserCreation, syncUserUpdation, syncUserDeletion, sendConnectionRequestReminder];
+// inngest function to delete after 24hrs
+const deleteStoryAfter24hrs = inngest.createFunction(
+  {
+    id: 'story-delete'
+  },
+  {
+    event: 'app/story.delete'
+  },
+  async({event, step}) => {
+    const {id} = event.data;
+
+    const in24Hours = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    await step.sleepUntil('wait-for-24-hours', in24Hours);
+
+    // delete story
+    await step.run('delete-story', async() => {
+      await Story.findByIdAndDelete(id);
+      return {message: 'story deleted'};
+    });
+  }
+);
+
+// inngest function to send notification of unseen messages
+const sendNotificationOfUnseenMessages = inngest.createFunction(
+  {
+    id: 'send-unseen-messages-notification'
+  },
+  {
+    cron: "TZ=America/New_York 0 9 * * *", // every day at 9AM
+  },
+  async({step}) => {
+    const message = await Message.find({seen: false}).populate('to_user_id');
+    const unSeenCount = {};
+
+    message.map(message => {
+      unSeenCount[message.to_user_id._id] = (unSeenCount[message.to_user_id._id] || 0) + 1;
+    })
+
+    for(const userId in unSeenCount){
+      const user = await User.findById(userId);
+      const subject = `You have ${unSeenCount[userId]} new messages`;
+      const body = `
+        <div style = "font-family: Arial, sans-serif; padding: 20px;">
+          <h2>Hi ${user.full_name},</h2>
+          <p>You have ${unSeenCount[userId]} new messages that you haven't seen yet.</p>
+          <p>Click <a href="${process.env.FRONTEND_URL}/messages" style = "color: #10b981">here</a> to view your messages.</p>
+        </div>
+      `
+
+      await sendEmail({
+        to: user.email,
+        subject,
+        html: body
+      });
+    }
+
+    return {message: 'notifications sent'};
+  }
+);
+
+export const functions = [
+  syncUserCreation, 
+  syncUserUpdation, 
+  syncUserDeletion, 
+  sendConnectionRequestReminder, 
+  deleteStoryAfter24hrs,
+  sendNotificationOfUnseenMessages
+];
