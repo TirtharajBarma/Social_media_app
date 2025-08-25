@@ -18,7 +18,8 @@ const postSchema = new mongoose.Schema({
         required: true
     },
     likes_count: [{
-        type: [{type: String, ref: 'User'}]
+        type: String, 
+        ref: 'User'
     }],
 }, {
     timestamps: true,

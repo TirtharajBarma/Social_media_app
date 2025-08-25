@@ -10,14 +10,15 @@ const storySchema = new mongoose.Schema({
         type: String,
     },
     media_url: {
-        type: [{type: String}],
+        type: String,
     },
     media_type: {
         type: String,
         enum: ["text", "image", "video"],
     },
     views_count: [{
-        type: [{type: String, ref: 'User'}]
+        type: String, 
+        ref: 'User'
     }],
     background_color: {
         type: String,
