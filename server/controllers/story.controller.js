@@ -7,7 +7,7 @@ import { inngest } from '../inngest/inngest.js';
 // add user story
 export const addUserStory = async (req, res) => {
     try {
-        const { userId } = req.auth();
+        const { userId } = await req.auth();
         const { content, media_type, background_color } = req.body;
         const media = req.file;
         let media_url = '';
@@ -31,12 +31,16 @@ export const addUserStory = async (req, res) => {
         });
 
         // schedule story deletion after 24hrs
-        await inngest.send({
-            event: 'app/story.delete',
-            data: {
-                id: story._id
-            }
-        });
+        try {
+            await inngest.send({
+                event: 'app/story.delete',
+                data: {
+                    id: story._id.toString()
+                }
+            });
+        } catch (inngestError) {
+            console.error('Inngest error (non-blocking):', inngestError);
+        }
 
         res.json({success: true, message: 'Story added successfully', story});
     } catch (error) {
@@ -48,7 +52,7 @@ export const addUserStory = async (req, res) => {
 // get user stories
 export const getUserStories = async (req, res) => {
     try {
-        const { userId } = req.auth();
+        const { userId } = await req.auth();
         const user = await User.findById(userId);
 
         // user connections and followings
