@@ -243,13 +243,18 @@ export const sendConnectionRequest = async (req, res) => {
             // status: 'pending' -> by default
         });
 
-        // trigger inngest function
-        await inngest.send({
-            event: 'app/connection-request',
-            data: {
-                connectionId: newConnection._id
-            }
-        });
+        // Optional: trigger inngest function (commented out to prevent errors)
+        try {
+            await inngest.send({
+                name: 'app/connection-request',
+                data: {
+                    connectionId: newConnection._id
+                }
+            });
+        } catch (inngestError) {
+            console.log('Inngest notification failed (non-critical):', inngestError.message);
+            // Continue execution even if notification fails
+        }
 
         return res.json({ success: true, message: 'Connection request sent successfully' });
 

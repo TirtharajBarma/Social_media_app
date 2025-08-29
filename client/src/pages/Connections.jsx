@@ -14,14 +14,15 @@ const Connections = () => {
 
   // used to select the current tab
   const [currentTab, setCurrentTab] = React.useState('Followers');
+  const [loading, setLoading] = React.useState(true);
 
   const { followers, following, connections, pendingConnections } = useSelector((state) => state.connections);
 
   const dataArray = [
-    {label: 'Followers', value: followers, icon: Users},
-    {label: 'Following', value: following, icon: UserCheck},
-    {label: 'Connections', value: connections, icon: UserPlus},
-    {label: 'Pending', value: pendingConnections, icon: UserRoundPen},
+    {label: 'Followers', value: followers || [], icon: Users},
+    {label: 'Following', value: following || [], icon: UserCheck},
+    {label: 'Connections', value: connections || [], icon: UserPlus},
+    {label: 'Pending', value: pendingConnections || [], icon: UserRoundPen},
   ];
 
   // unfollow function
@@ -68,8 +69,16 @@ const Connections = () => {
 
   useEffect(() => {
     const fetchData = async() => {
-      const token = await getToken();
-      dispatch(fetchConnections(token));
+      try {
+        setLoading(true);
+        const token = await getToken();
+        await dispatch(fetchConnections(token));
+      } catch (error) {
+        console.error('Error fetching connections:', error);
+        toast.error('Failed to load connections');
+      } finally {
+        setLoading(false);
+      }
     }
     fetchData();
   }, [getToken, dispatch]);
@@ -116,43 +125,60 @@ const Connections = () => {
         {/* connections */}
         <div className='flex flex-wrap gap-6 mt-6'>
           {
-            dataArray.find((item) => item.label === currentTab).value.map((user) => (
-              <div key={user._id} className='w-full max-w-88 flex gap-5 p-6 bg-white shadow rounded-md'>
-                <img src={user.profile_picture} alt='' className='rounded-full w-12 h-12 shadow-md mx-auto' />
-                <div className='flex-1'>
-                  <p className='font-medium text-slate-700'>{user.full_name}</p>
-                  <p className='text-slate-500'>@{user.username}</p>
-                  <p className='text-gray-600 text-sm'>{user.bio.slice(0, 30)}...</p>
+            loading ? (
+              <div className='w-full text-center py-12'>
+                <div className='animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto'></div>
+                <p className='text-gray-500 mt-4'>Loading connections...</p>
+              </div>
+            ) : dataArray.find((item) => item.label === currentTab)?.value?.length > 0 ? (
+              dataArray.find((item) => item.label === currentTab).value.map((user) => (
+                <div key={user._id} className='w-full max-w-88 flex gap-5 p-6 bg-white shadow rounded-md'>
+                  <img src={user.profile_picture || '/default-avatar.png'} alt='' className='rounded-full w-12 h-12 shadow-md mx-auto' />
+                  <div className='flex-1'>
+                    <p className='font-medium text-slate-700'>{user.full_name || 'Unknown User'}</p>
+                    <p className='text-slate-500'>@{user.username || 'unknown'}</p>
+                    <p className='text-gray-600 text-sm'>{user.bio ? user.bio.slice(0, 30) + '...' : 'No bio available'}</p>
 
-                  <div className='flex max-sm:flex-col gap-2 mt-4'>
-                    {
-                      <button onClick={() => navigate(`/profile/${user._id}`)} className='w-full p-2 text-sm rounded bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 active:scale-95 transition text-white cursor-pointer'>view Profile</button>
-                    }
+                    <div className='flex max-sm:flex-col gap-2 mt-4'>
+                      {
+                        <button onClick={() => navigate(`/profile/${user._id}`)} className='w-full p-2 text-sm rounded bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 active:scale-95 transition text-white cursor-pointer'>view Profile</button>
+                      }
 
-                    {/* other icons based on current tab */}
-                    {
-                      currentTab === 'Following' && (
-                        <button onClick={() => handleUnfollow(user._id)} className='w-full p-2 text-sm rounded bg-slate-100 hover:bg-slate-200 text-black active:Scale-95 transition cursor-pointer'>Unfollow</button>
-                      )
-                    }
+                      {/* other icons based on current tab */}
+                      {
+                        currentTab === 'Following' && (
+                          <button onClick={() => handleUnfollow(user._id)} className='w-full p-2 text-sm rounded bg-slate-100 hover:bg-slate-200 text-black active:Scale-95 transition cursor-pointer'>Unfollow</button>
+                        )
+                      }
 
-                    {
-                      currentTab === 'Pending' && (
-                        <button onClick={() => acceptConnection(user._id)} className='w-full p-2 text-sm rounded bg-slate-100 hover:bg-slate-200 text-black active:Scale-95 transition cursor-pointer'>Accept</button>
-                      )
-                    }
+                      {
+                        currentTab === 'Pending' && (
+                          <button onClick={() => acceptConnection(user._id)} className='w-full p-2 text-sm rounded bg-slate-100 hover:bg-slate-200 text-black active:Scale-95 transition cursor-pointer'>Accept</button>
+                        )
+                      }
 
-                    {
-                      currentTab === 'Connections' && (
-                        <button className='w-full p-2 text-sm rounded bg-slate-100 hover:bg-slate-200 text-black active:Scale-95 transition cursor-pointer flex items-center justify-center gap-1' onClick={() => navigate(`/messages/${user._id}`)}>
-                          <MessageSquare className='w-4 h-4' /> Message
-                        </button>
-                      )
-                    }
+                      {
+                        currentTab === 'Connections' && (
+                          <button className='w-full p-2 text-sm rounded bg-slate-100 hover:bg-slate-200 text-black active:Scale-95 transition cursor-pointer flex items-center justify-center gap-1' onClick={() => navigate(`/messages/${user._id}`)}>
+                            <MessageSquare className='w-4 h-4' /> Message
+                          </button>
+                        )
+                      }
+                    </div>
                   </div>
                 </div>
+              ))
+            ) : (
+              <div className='w-full text-center py-12'>
+                <p className='text-gray-500 text-lg'>No {currentTab.toLowerCase()} found</p>
+                <p className='text-gray-400 text-sm mt-2'>
+                  {currentTab === 'Followers' && 'No one is following you yet'}
+                  {currentTab === 'Following' && "You're not following anyone yet"}
+                  {currentTab === 'Connections' && 'No connections yet'}
+                  {currentTab === 'Pending' && 'No pending connection requests'}
+                </p>
               </div>
-            ))
+            )
           }
         </div>
 
