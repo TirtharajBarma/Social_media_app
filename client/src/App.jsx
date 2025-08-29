@@ -10,12 +10,13 @@ import Messages from './pages/Messages';
 import ChatBox from './pages/ChatBox';
 import Discover from './pages/Discover';
 import CreatePost from './pages/CreatePost';
-import {Toaster} from 'react-hot-toast';
+import toast, {Toaster} from 'react-hot-toast';
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { fetchUser } from './features/user/userSlice';
 import { fetchConnections } from './features/connections/connectionSlice';
 import { addMessage } from './features/messages/messageSlice';
+import Notification from './components/Notification';
 
 const App = () => {
   const {user} = useUser();
@@ -60,7 +61,9 @@ const App = () => {
           dispatch(addMessage(data));
       } else {
         // notification component - could add toast notification here
-        console.log('New message from:', data.from_user_id.full_name);
+        toast.custom((t) => (
+          <Notification t={t} message={data} />
+        ), {position: 'bottom-right'});
       }
     }
 
