@@ -117,6 +117,10 @@ export const discoverUsers = async(req, res) => {
         const {userId} = req.auth();
         const {input} = req.body;
 
+        if (!input || input.trim() === '') {
+            return res.json({ success: false, message: 'Search input is required' });
+        }
+
         const allUser = await User.find({
             $or: [
                 { username: new RegExp(input, 'i') },
@@ -127,7 +131,7 @@ export const discoverUsers = async(req, res) => {
         })
 
         // remove the current user to search itself
-        const filterUser = allUser.filter(user => user._id !== userId);
+        const filterUser = allUser.filter(user => user._id.toString() !== userId);
 
         res.json({ success: true, users: filterUser });
     } catch (error) {
