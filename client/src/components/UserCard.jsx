@@ -7,13 +7,21 @@ import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
 import { fetchConnections } from '../features/connections/connectionSlice';
+import { fetchUser } from '../features/user/userSlice';
 
 const UserCard = ({ user }) => {
 
     const currentUser = useSelector((state) => state.user.value);  // redux
+    const connections = useSelector((state) => state.connections);  // redux
     const {getToken} = useAuth();
     const dispatch = useDispatch();
     const navigate = useNavigate();
+
+    // Check if connection request is already sent or pending
+    const isConnectionPending = connections.pendingConnections?.some(
+        pendingUser => pendingUser._id === user._id
+    );
+    const isAlreadyConnected = currentUser?.connections?.includes(user._id);
 
     const handleFollow = async() => {
       // Handle follow user logic
@@ -24,6 +32,8 @@ const UserCard = ({ user }) => {
 
         if(data.success) {
           toast.success(data.message);
+          // Refresh user data to update following status
+          dispatch(fetchUser(await getToken()));
           dispatch(fetchConnections(await getToken()));
         } else {
           toast.error(data.message || 'Failed to follow user');
@@ -37,8 +47,12 @@ const UserCard = ({ user }) => {
 
     const connectionRequest = async() => {
       // Handle connection request logic
-      if (currentUser?.connections?.includes(user._id)) {
-          return navigate(`/messages` + user._id);
+      if (isAlreadyConnected) {
+          return navigate(`/messages/${user._id}`);
+      }
+
+      if (isConnectionPending) {
+          return toast.error('Connection request already sent');
       }
 
       try {
@@ -48,6 +62,8 @@ const UserCard = ({ user }) => {
 
         if(data.success) {
           toast.success(data.message);
+          // Refresh connections data to update UI
+          dispatch(fetchConnections(await getToken()));
         } else {
           toast.error(data.message || 'Failed to send connection request');
         }
@@ -82,9 +98,19 @@ const UserCard = ({ user }) => {
           </button>
 
           {/* connectionRequest */}
-          <button onClick={connectionRequest} className='flex items-center justify-center w-16 border text-plate-500 group rounded-md cursor-pointer active:scale-95 transition'>
+          <button 
+            onClick={connectionRequest} 
+            disabled={isConnectionPending}
+            className={`flex items-center justify-center w-16 border rounded-md cursor-pointer active:scale-95 transition ${
+              isConnectionPending 
+                ? 'border-gray-300 text-gray-400 cursor-not-allowed' 
+                : 'text-slate-500 border-gray-300 hover:border-purple-500 hover:text-purple-500 group'
+            }`}
+          >
             {
-              currentUser?.connections?.includes(user._id) ? <MessageCircle className='w-5 h-5 group-hover:scale-105  transition' /> : <Plus className='w-5 h-5 group-hover:scale-105  transition' />
+              isAlreadyConnected ? 
+                <MessageCircle className='w-5 h-5 group-hover:scale-105 transition' /> : 
+                <Plus className={`w-5 h-5 ${!isConnectionPending && 'group-hover:scale-105'} transition`} />
             }
           </button>
         </div>

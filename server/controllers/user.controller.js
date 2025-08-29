@@ -146,19 +146,21 @@ export const followUser = async(req, res) => {
         const {userId} = req.auth();
         const {id} = req.body;
 
-        const user = await User.findById(id);
+        const currentUser = await User.findById(userId);
+        const targetUser = await User.findById(id);
 
-        // user already follows the user
-        if(user.followers.includes(userId)){
+        // Check if user already follows the target user
+        if(currentUser.following.includes(id)){
             return res.json({ success: false, message: 'You are already following this user' });
         }
 
-        if(user.following.push(id));
-        await user.save();
+        // Add target user to current user's following list
+        currentUser.following.push(id);
+        await currentUser.save();
 
-        const toUser = await User.findById(id);
-        toUser.followers.push(userId);
-        await toUser.save();
+        // Add current user to target user's followers list
+        targetUser.followers.push(userId);
+        await targetUser.save();
 
         res.json({ success: true, message: 'User followed successfully' });
 
@@ -209,7 +211,7 @@ export const sendConnectionRequest = async (req, res) => {
             return res.json({ success: false, message: 'You have reached the limit of 20 connection requests in the last 24 hours' });
         }
 
-        // check user is already connected
+        // check if user is already connected
         const isConnected = await Connection.findOne({
             $or: [
                 { from_user_id: userId, to_user_id: id },
@@ -218,28 +220,38 @@ export const sendConnectionRequest = async (req, res) => {
             status: 'accepted'
         });
 
-        if (!isConnected) {
-            // Create a new connection request
-            const newConnection = await Connection.create({
-                from_user_id: userId,
-                to_user_id: id,
-                // status: 'pending' -> by default
-            });
-
-            // trigger inngest function
-            await inngest.send({
-                event: 'app/connection-request',
-                data: {
-                    connectionId: newConnection._id
-                }
-            });
-
-            return res.json({ success: true, message: 'Connection request sent successfully' });
-        }
-        else if(isConnected && isConnected.status === 'accepted') {
+        if (isConnected) {
             return res.json({ success: false, message: 'You are already connected with this user' });
         }
-        return res.json({ success: false, message: 'Connection request already sent' });
+
+        // check if connection request already exists (pending)
+        const existingRequest = await Connection.findOne({
+            $or: [
+                { from_user_id: userId, to_user_id: id, status: 'pending' },
+                { from_user_id: id, to_user_id: userId, status: 'pending' }
+            ]
+        });
+
+        if (existingRequest) {
+            return res.json({ success: false, message: 'Connection request already sent or pending' });
+        }
+
+        // Create a new connection request
+        const newConnection = await Connection.create({
+            from_user_id: userId,
+            to_user_id: id,
+            // status: 'pending' -> by default
+        });
+
+        // trigger inngest function
+        await inngest.send({
+            event: 'app/connection-request',
+            data: {
+                connectionId: newConnection._id
+            }
+        });
+
+        return res.json({ success: true, message: 'Connection request sent successfully' });
 
     } catch (error) {
         console.error('Error sending connection request:', error);
