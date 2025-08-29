@@ -31,9 +31,9 @@ export const sseController = (req, res) => {
 }
 
 // send message
-export const sendMessage = async(message) => {
+export const sendMessage = async(req, res) => {
     try{
-        const {userId} = req.auth;
+        const {userId} = req.auth();
         const {to_user_id, text} = req.body;
         const image = req.file;
 
@@ -82,7 +82,7 @@ export const sendMessage = async(message) => {
 // get Chat messages
 export const getChatMessages = async (req, res) => {
     try {
-        const { userId } = req.params;
+        const { userId } = req.auth();
         const {to_user_id} = req.body;
 
         const messages = await Message.find({
@@ -108,7 +108,7 @@ export const getChatMessages = async (req, res) => {
 // get recent messages for a user
 export const getUserRecentMessages = async (req, res) => {
     try {
-        const { userId } = req.params;
+        const { userId } = req.auth();
         const messages = await Message.find({
             to_user_id: userId
         }).populate('from_user_id').sort({ createdAt: -1 });
