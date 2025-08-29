@@ -81,7 +81,7 @@ const Connections = () => {
       }
     }
     fetchData();
-  }, [getToken, dispatch]);
+  }, [dispatch]); // Remove getToken from dependencies
 
   return (
     <div className='min-h-screen bg-slate-50'>

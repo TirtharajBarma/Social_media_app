@@ -42,7 +42,7 @@ const Discover = () => {
     getToken().then((token) => {
       dispatch(fetchUser(token))
     })
-  }, [getToken, dispatch])
+  }, [dispatch])
 
   return (
     <div className='min-h-screen bg-gradient-to-b from-slate-50 to-white'>

@@ -1,22 +1,83 @@
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState, useRef, useCallback } from 'react'
 import { dummyMessagesData, dummyUserData } from '../assets/assets'
 import { ImageIcon, SendHorizonal } from 'lucide-react';
 import { ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useAuth } from '@clerk/clerk-react';
+import { useDispatch, useSelector } from 'react-redux';
+import api from '../api/axios';
+import { addMessage, fetchMessages, resetMessages } from '../features/messages/messageSlice';
+import toast from 'react-hot-toast';
 
 
 const ChatBox = () => {
-  const messages = dummyMessagesData;
+  const {messages} = useSelector((state) => state.messages);
   const [text, setText] = useState('');
   const [image, setImage] = useState(null);   // store single file or null
-  const [user, setUser] = useState(dummyUserData);
+  const [user, setUser] = useState(null);
   const messagesEndRef = useRef();
+
+  const {userId} = useParams();
+  const {getToken} = useAuth();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const connections = useSelector((state) => state.connections.connections);
+
+  const fetchUserMessages = useCallback(async() => {
+    try {
+      const token = await getToken();
+      dispatch(fetchMessages({token, userId}));
+    } catch (error) {
+      toast.error('Error fetching messages:', error.message);
+    }
+  }, [userId, dispatch]);
 
   const sendMessage = async () => {
     // Handle sending message logic here
+    try {
+      if(!text && !image) return;  // if both text and image are empty, do nothing
+
+      const token = await getToken();
+      const formData = new FormData();
+      formData.append('to_user_id', userId);
+      formData.append('text', text);
+      image && formData.append('image', image);
+
+      const {data} = await api.post('/api/messages/send', formData, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      if(data.success) {
+        setText('');
+        setImage(null);
+        dispatch(addMessage(data.message));
+      } else {
+        throw new Error(data.message || 'Failed to send message');
+      }
+
+    } catch (error) {
+      toast.error('Error sending message:', error.message);
+    }
   };
 
-  const navigate = useNavigate();
+  useEffect(() => {
+    fetchUserMessages();
+
+    return () => {
+      dispatch(resetMessages());
+    }
+  }, [fetchUserMessages]); // Depend on the memoized function
+
+  useEffect(() => {
+    if(connections.length > 0) {
+      const user = connections.find(conn => conn._id === userId);
+      setUser(user);
+    }
+  }, [connections, userId])
+
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

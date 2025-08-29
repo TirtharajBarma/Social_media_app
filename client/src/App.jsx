@@ -41,7 +41,7 @@ const App = () => {
 
     fetchData();
 
-  }, [user, getToken, dispatch]);
+  }, [user, dispatch]);
 
   return (
     <>
