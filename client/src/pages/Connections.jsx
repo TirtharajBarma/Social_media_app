@@ -1,18 +1,21 @@
-import React from 'react'
+import React, { use, useEffect } from 'react'
 import {Users, UserPlus, UserCheck, UserRoundPen, MessageSquare} from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import {
-  dummyConnectionsData as connections,
-  dummyFollowersData as followers,
-  dummyFollowingData as following,
-  dummyPendingConnectionsData as pendingConnections
-} from '../assets/assets'
+import { useSelector, useDispatch } from 'react-redux';
+import { useAuth } from '@clerk/clerk-react';
+import { fetchConnections } from '../features/connections/connectionSlice';
+import toast from 'react-hot-toast';
+import api from '../api/axios';
 
 const Connections = () => {
   const navigate = useNavigate();
+  const {getToken} = useAuth();
+  const dispatch = useDispatch();
 
   // used to select the current tab
   const [currentTab, setCurrentTab] = React.useState('Followers');
+
+  const { followers, following, connections, pendingConnections } = useSelector((state) => state.connections);
 
   const dataArray = [
     {label: 'Followers', value: followers, icon: Users},
@@ -20,6 +23,56 @@ const Connections = () => {
     {label: 'Connections', value: connections, icon: UserPlus},
     {label: 'Pending', value: pendingConnections, icon: UserRoundPen},
   ];
+
+  // unfollow function
+  const handleUnfollow = async (userId) => {
+    try {
+      const token = await getToken();
+      const {data} = await api.post('/api/users/unfollow', {id: userId}, {
+        headers: {Authorization: `Bearer ${token}`},
+      });
+      
+      if (data.success) {
+        toast.success(data.message);
+        dispatch(fetchConnections(token));
+      } else {
+        toast.error(data.message || 'Failed to unfollow user');
+      }
+
+    } catch (error) {
+      toast.error('Error unfollowing user');
+      console.error('Error unfollowing user:', error);
+    }
+  }
+
+  // accept connection request
+  const acceptConnection = async(userId) => {
+    try {
+      const token = await getToken();
+      const {data} = await api.post('/api/users/accept', {id: userId}, {
+        headers: {Authorization: `Bearer ${token}`},
+      });
+
+      if (data.success) {
+        toast.success(data.message);
+        dispatch(fetchConnections(token));
+      } else {
+        toast.error(data.message || 'Failed to accept connection');
+      }
+
+    } catch (error) {
+      toast.error('Error accepting connection');
+      console.error('Error accepting connection:', error);
+    }
+  }
+
+  useEffect(() => {
+    const fetchData = async() => {
+      const token = await getToken();
+      dispatch(fetchConnections(token));
+    }
+    fetchData();
+  }, [getToken, dispatch]);
 
   return (
     <div className='min-h-screen bg-slate-50'>
@@ -79,13 +132,13 @@ const Connections = () => {
                     {/* other icons based on current tab */}
                     {
                       currentTab === 'Following' && (
-                        <button className='w-full p-2 text-sm rounded bg-slate-100 hover:bg-slate-200 text-black active:Scale-95 transition cursor-pointer'>Unfollow</button>
+                        <button onClick={() => handleUnfollow(user._id)} className='w-full p-2 text-sm rounded bg-slate-100 hover:bg-slate-200 text-black active:Scale-95 transition cursor-pointer'>Unfollow</button>
                       )
                     }
 
                     {
                       currentTab === 'Pending' && (
-                        <button className='w-full p-2 text-sm rounded bg-slate-100 hover:bg-slate-200 text-black active:Scale-95 transition cursor-pointer'>Accept</button>
+                        <button onClick={() => acceptConnection(user._id)} className='w-full p-2 text-sm rounded bg-slate-100 hover:bg-slate-200 text-black active:Scale-95 transition cursor-pointer'>Accept</button>
                       )
                     }
 

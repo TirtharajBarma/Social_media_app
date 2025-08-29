@@ -1,9 +1,16 @@
 import React, { use } from 'react'
 import { dummyUserData } from '../assets/assets'
 import { Pencil } from 'lucide-react';
+import { useDispatch, useSelector } from 'react-redux';
+import { updateUser } from '../features/user/userSlice';
+import { useAuth } from '@clerk/clerk-react';
+import toast from 'react-hot-toast';
 
 const ProfileModel = ({setShowEdit}) => {
-    const user = dummyUserData;
+    const user = useSelector((state) => state.user.value);  // redux
+    const dispatch = useDispatch();
+    const {getToken} = useAuth();
+
     const [editForm, setEditForm] = React.useState({
         username: user.username,
         bio: user.bio,
@@ -16,6 +23,23 @@ const ProfileModel = ({setShowEdit}) => {
     const handleSaveProfile = async(e) => {
         e.preventDefault();
         // Save profile logic here
+        try {
+            const userData = new FormData();
+            const {username, bio, location, profile_picture, full_name, cover_photo} = editForm;
+            userData.append('username', username);
+            userData.append('bio', bio);
+            userData.append('location', location);
+            profile_picture && userData.append('profile', profile_picture);
+            userData.append('full_name', full_name);
+            cover_photo && userData.append('cover', cover_photo);
+
+            const token = await getToken();
+            dispatch(updateUser({userData, token}));
+
+            setShowEdit(false);
+        } catch (error) {
+            toast.error("Failed to update profile");
+        }
     };
 
   return (
@@ -25,7 +49,11 @@ const ProfileModel = ({setShowEdit}) => {
                 <h1 className='text-2xl font-bold text-gray-900 mb-6'>Edit Profile</h1>
 
                 {/* form */}
-                <form className='space-y-4' onSubmit={handleSaveProfile}>
+                <form className='space-y-4' onSubmit={e => toast.promise(handleSaveProfile(e), {
+                    loading: "Updating...",
+                    success: "Profile updated successfully!",
+                    error: "Failed to update profile"
+                })}>
                     {/* profile picture */}
                     <div className='flex flex-col items-start gap-3'>
                         <label htmlFor="profile_picture" className='block text-sm font-medium text-gray-700 mb-1'>

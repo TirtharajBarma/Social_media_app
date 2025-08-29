@@ -6,23 +6,52 @@ import UserProfileInfo from '../components/UserProfileInfo';
 import PostCard from '../components/PostCard';
 import moment from 'moment';
 import ProfileModel from '../components/ProfileModel';
+import toast from 'react-hot-toast';
+import api from '../api/axios';
+import {useAuth} from '@clerk/clerk-react'
+import { useSelector } from 'react-redux';
+
 
 const Profile = () => {
+
+  const currentUser = useSelector((state) => state.user.value);
+
   const {profileId} = useParams();
+  const {getToken} = useAuth();
 
   const [user, setUser] = React.useState(null);
   const [posts, setPosts] = React.useState([]);
   const [active, setActive] = React.useState('post');
   const [showEdit, setShowEdit] = React.useState(false);
 
-  const fetchUserData = async () => {
-    setUser(dummyUserData);
-    setPosts(dummyPostsData);
+  const fetchUserData = async (profileId) => {
+    // fetch user data from backend
+    const token = await getToken();
+    try {
+      const {data} = await api.post('/api/users/profile', {profileId}, {headers: {Authorization: `Bearer ${token}`}})
+
+      if(data.success) {
+        setUser(data.profile);
+        setPosts(data.posts);
+      } else {
+        toast.error(data.message);
+      }
+
+    } catch (error) {
+      toast.error("Error fetching user data" + error.message);
+    }
+    
   }
 
   useEffect(() => {
-    fetchUserData();
-  }, [profileId]);
+    if(!currentUser) return; // Don't run if currentUser is not loaded yet
+    
+    if(profileId) {
+      fetchUserData(profileId);
+    } else {
+      fetchUserData(currentUser._id);
+    }
+  }, [profileId, currentUser]);
 
   return user ? (
     <div className='relative h-full overflow-y-scroll bg-gray-50 p-6'>

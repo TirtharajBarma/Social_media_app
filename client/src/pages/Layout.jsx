@@ -4,9 +4,10 @@ import SideBar from '../components/SideBar'
 import { Menu, X } from 'lucide-react';
 import { dummyUserData } from '../assets/assets';
 import Loading from '../components/Loading';
+import { useSelector } from 'react-redux';
 
 const Layout = () => {
-  const user = dummyUserData;
+  const user = useSelector((state) => state.user.value);              // redux
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
   return user ? (

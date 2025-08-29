@@ -2,17 +2,57 @@ import React, { useState } from 'react'
 import { dummyUserData } from '../assets/assets';
 import { Image, X } from 'lucide-react';
 import toast from 'react-hot-toast'
+import { useSelector } from 'react-redux';
+import { useAuth } from '@clerk/clerk-react';
+import api from '../api/axios';
+import { useNavigate } from 'react-router-dom';
 
 const CreatePost = () => {
   const [content, setContent] = useState('');
   const [image, setImage] = useState([]);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  const user = dummyUserData;
+  const user = useSelector((state) => state.user.value);  // redux
+
+  const {getToken} = useAuth();
 
   const handleSubmit = async(e) => {
     e.preventDefault();
     // Handle post creation logic here
+    if(!image.length && !content){
+      toast.error("Please add some content or an image");
+      return;
+    }
+    setLoading(true);
+    const postType = image.length && content ? 'text_with_image' : image.length ? 'image' : 'text';
+
+    try {
+      const formData = new FormData();
+      formData.append('content', content);
+      formData.append('post_type', postType);
+      image.map((img) => {
+        formData.append('image', img);
+      });
+
+      const {data} = await api.post('/api/post/add', formData, {
+        headers: {
+         Authorization: `Bearer ${await getToken()}`
+        }
+      });
+
+      if (data.success) {
+        navigate('/');
+      } else {
+        console.error(data.message);
+        throw new Error(data.message);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error(error.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -62,7 +102,7 @@ const CreatePost = () => {
                 <Image className='size-6' />
               </label>
               <input type='file' id='images' accept='image/*' hidden multiple onChange={(e) => setImage([...image, ...e.target.files])} />
-              <button disabled={loading} onClick={() => toast.promise(handleSubmit(), 
+              <button disabled={loading} onClick={(e) => toast.promise(handleSubmit(e), 
                 {
                   loading: 'Publishing...',
                   success: 'Post published!',

@@ -1,25 +1,48 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { dummyConnectionsData } from '../assets/assets';
 import { Search } from 'lucide-react';
 import UserCard from '../components/UserCard';
 import Loading from '../components/Loading';
+import { useAuth } from '@clerk/clerk-react';
+import toast from 'react-hot-toast';
+import { useDispatch } from 'react-redux';
+import { fetchUser } from '../features/user/userSlice';
+import api from '../api/axios';
 
 const Discover = () => {
 
   const [inputValue, setInputValue] = React.useState('');
-  const [users, setUsers] = React.useState(dummyConnectionsData);
+  const [users, setUsers] = React.useState([]);
   const [loading, setLoading] = React.useState(false);
+  const {getToken} = useAuth();
+  const dispatch = useDispatch();
 
   const handleSearch = async(e) => {
     if(e.key === 'Enter') {
-      setUsers([]);
-      setLoading(true);
-      setTimeout(() => {
-        setUsers(dummyConnectionsData);
+      try {
+        setUsers([]);
+        setLoading(true);
+        const {data} = await api.post('/api/users/discover', {input: inputValue}, {
+          headers: {
+            Authorization: `Bearer ${await getToken()}`
+          }
+        });
+        data.success ? setUsers(data.users) : toast.error(data.message || 'Failed to search users');
         setLoading(false);
-      }, 1000);
+        setInputValue('');
+      } catch (error) {
+        console.error('Error searching users:', error);
+        toast.error('Error searching users');
+        setLoading(false);
+      }
     }
   }
+
+  useEffect(() => {
+    getToken().then((token) => {
+      dispatch(fetchUser(token))
+    })
+  }, [getToken, dispatch])
 
   return (
     <div className='min-h-screen bg-gradient-to-b from-slate-50 to-white'>
