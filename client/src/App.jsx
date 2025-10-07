@@ -53,7 +53,10 @@ const App = () => {
 
   useEffect(() => {
     if(user){
-      const eventSource = new EventSource(import.meta.env.VITE_BASE_URL + '/api/messages/' + user.id);
+    // Build SSE URL safely (trim trailing slash from VITE_BASE_URL) to avoid double-slash -> redirects
+    const base = (import.meta.env.VITE_BASE_URL || '').replace(/\/$/, '');
+    const sseUrl = `${base}/api/messages/${user.id}`;
+    const eventSource = new EventSource(sseUrl);
       eventSource.onmessage = (event) => {
        const data = JSON.parse(event.data);
        if(pathNameRef.current.pathname === ('/messages/' + data.from_user_id._id)) {
