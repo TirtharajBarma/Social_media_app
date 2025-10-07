@@ -1,5 +1,4 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react'
-import { dummyMessagesData, dummyUserData } from '../assets/assets'
 import { ImageIcon, SendHorizonal } from 'lucide-react';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
