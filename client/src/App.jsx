@@ -10,6 +10,7 @@ import Messages from './pages/Messages';
 import ChatBox from './pages/ChatBox';
 import Discover from './pages/Discover';
 import CreatePost from './pages/CreatePost';
+import PostDetail from './pages/PostDetail';
 import toast, {Toaster} from 'react-hot-toast';
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
@@ -19,8 +20,8 @@ import { addMessage } from './features/messages/messageSlice';
 import Notification from './components/Notification';
 
 const App = () => {
-  const {user} = useUser();
-  const {getToken} = useAuth();
+  const {user, isSignedIn} = useUser();
+  const {getToken, signOut} = useAuth();
   const pathname = useLocation();
   const pathNameRef = useRef(pathname);
 
@@ -33,6 +34,46 @@ const App = () => {
   // }, [user]);
 
   const dispatch = useDispatch();
+
+  // Auto logout after 4 hours for security
+  useEffect(() => {
+    if (isSignedIn) {
+      const LOGIN_TIME_KEY = 'userLoginTime';
+      const FOUR_HOURS = 4 * 60 * 60 * 1000; // 4 hours in milliseconds
+
+      // Get or set login time
+      let loginTime = localStorage.getItem(LOGIN_TIME_KEY);
+      if (!loginTime) {
+        loginTime = Date.now().toString();
+        localStorage.setItem(LOGIN_TIME_KEY, loginTime);
+      }
+
+      // Check if 4 hours have passed
+      const checkSessionExpiry = () => {
+        const currentTime = Date.now();
+        const elapsed = currentTime - parseInt(loginTime);
+
+        if (elapsed >= FOUR_HOURS) {
+          toast.error('Session expired. Please sign in again for security.');
+          localStorage.removeItem(LOGIN_TIME_KEY);
+          signOut();
+        }
+      };
+
+      // Check immediately
+      checkSessionExpiry();
+
+      // Set up interval to check every minute
+      const interval = setInterval(checkSessionExpiry, 60000);
+
+      return () => {
+        clearInterval(interval);
+      };
+    } else {
+      // Clear login time when user signs out
+      localStorage.removeItem('userLoginTime');
+    }
+  }, [isSignedIn, signOut]);
 
   useEffect(() => {
     const fetchData = async() => {
@@ -88,6 +129,7 @@ const App = () => {
             <Route index element={<Feed />} />
             <Route path="profile" element={<Profile />} />
             <Route path="profile/:profileId" element={<Profile />} />
+            <Route path="post/:postId" element={<PostDetail />} />
             <Route path="connections" element={<Connections />} />
             <Route path="messages" element={<Messages />} />
             <Route path="messages/:userId" element={<ChatBox />} />

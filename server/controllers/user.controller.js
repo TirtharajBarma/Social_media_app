@@ -330,7 +330,11 @@ export const getUserProfile = async (req, res) => {
             return res.json({ success: false, message: 'User not found' });
         }
 
-        const posts = await Post.find({ user: profileId }).populate('user');
+        // Sort posts by createdAt descending (latest first)
+        const posts = await Post.find({ user: profileId })
+            .populate('user')
+            .populate('comments.user')
+            .sort({ createdAt: -1 });
         res.json({ success: true, profile, posts });
 
     } catch (error) {

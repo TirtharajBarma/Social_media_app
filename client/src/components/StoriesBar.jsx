@@ -39,6 +39,9 @@ const StoriesBar = () => {
 
     return (
         <div className='w-screen sm:w-[calc(100vw-240px)] lg:max-w-2xl no-scrollbar overflow-x-auto px-4'>
+            <div className='mb-3 flex items-center justify-between pr-12'>
+                <h2 className='text-lg font-semibold text-gray-800'>Stories</h2>
+            </div>
             <div className='flex gap-4 pb-5'>
                 
                 {/* add story card */}

@@ -6,10 +6,16 @@ import { useSelector } from 'react-redux';
 import { useAuth } from '@clerk/clerk-react';
 import api from '../api/axios';
 import toast from 'react-hot-toast';
+import CommentModal from './CommentModal';
+import ShareModal from './ShareModal';
 
 const PostCard = ({ post }) => {
 
     const [liked, setLiked] = React.useState(post.likes_count);
+    const [commentCount, setCommentCount] = React.useState(post.comments?.length || 0);
+    const [sharesCount, setSharesCount] = React.useState(post.shares_count || 0);
+    const [showCommentModal, setShowCommentModal] = React.useState(false);
+    const [showShareModal, setShowShareModal] = React.useState(false);
     const currentUser = useSelector((state) => state.user.value);  // redux
     const {getToken} = useAuth();
 
@@ -42,8 +48,8 @@ const PostCard = ({ post }) => {
 
     const navigate = useNavigate();
 
-    // Highlight hashtags
-    const postWithHashtags = post.content.replace(/#(\w+)/g, '<span class="text-indigo-500">#$1</span>');
+    // Highlight hashtags (only if content exists)
+    const postWithHashtags = post.content ? post.content.replace(/#(\w+)/g, '<span class="text-indigo-500">#$1</span>') : '';
 
   return (
     <div className='bg-white rounded-xl shadow p-4 space-y-4 w-full max-w-2xl'>
@@ -63,29 +69,50 @@ const PostCard = ({ post }) => {
         {post.content && <div className='text-gray-800 text-sm whitespace-pre-line' dangerouslySetInnerHTML={{ __html: postWithHashtags }} />}
 
         {/* images */}
-        <div className='grid grid-cols-2 gap-2'>
-            {post.image_urls.map((url, index) => (
-                <img key={index} src={url} alt='' className={`w-full h-48 object-cover rounded-lg ${post.image_urls.length === 1 ? 'col-span-2 h-auto' : ''}`} />
-            ))}
-        </div>
+        {post.image_urls && post.image_urls.length > 0 && (
+            <div className='grid grid-cols-2 gap-2'>
+                {post.image_urls.map((url, index) => (
+                    <img key={index} src={url} alt='' className={`w-full h-48 object-cover rounded-lg ${post.image_urls.length === 1 ? 'col-span-2 h-auto' : ''}`} />
+                ))}
+            </div>
+        )}
 
         {/* post actions [like, comment, share] */}
         <div className='flex items-center gap-4 text-gray-600 text-sm pt-2 border-t border-gray-300'>
             
-            <div className='flex items-center gap-1'>
-                <Heart className={`w-4 h-4 cursor-pointer ${liked.includes(currentUser._id) && 'text-red-500 fill-red-500'}`} onClick={handleLike} />
+            <div className='flex items-center gap-1 cursor-pointer hover:text-red-500 transition' onClick={handleLike}>
+                <Heart className={`w-4 h-4 ${currentUser && liked.includes(currentUser._id) && 'text-red-500 fill-red-500'}`} />
                 <span>{liked.length} Likes</span>
             </div>
-            <div className='flex items-center gap-1'>
+            <div className='flex items-center gap-1 cursor-pointer hover:text-blue-500 transition' onClick={() => setShowCommentModal(true)}>
                 <MessageCircle className='w-4 h-4' />
-                <span>{12}</span>
+                <span>{commentCount} Comments</span>
             </div>
-            <div className='flex items-center gap-1'>
+            <div className='flex items-center gap-1 cursor-pointer hover:text-green-500 transition' onClick={() => setShowShareModal(true)}>
                 <Share2 className='w-4 h-4' />
-                <span>{7}</span>
+                <span>{sharesCount} Shares</span>
             </div>
 
         </div>
+
+        {/* Comment Modal */}
+        {showCommentModal && (
+            <CommentModal 
+                postId={post._id} 
+                onClose={() => setShowCommentModal(false)}
+                currentCommentCount={commentCount}
+                onCommentAdded={() => setCommentCount(prev => prev + 1)}
+            />
+        )}
+
+        {/* Share Modal */}
+        {showShareModal && post && post.user && (
+            <ShareModal 
+                post={post} 
+                onClose={() => setShowShareModal(false)}
+                onShareComplete={(newShareCount) => setSharesCount(newShareCount)}
+            />
+        )}
     </div>
   )
 }

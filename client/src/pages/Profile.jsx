@@ -47,7 +47,7 @@ const Profile = () => {
     
     if(profileId) {
       fetchUserData(profileId);
-    } else {
+    } else if(currentUser._id) {
       fetchUserData(currentUser._id);
     }
   }, [profileId, currentUser]);

@@ -48,9 +48,15 @@ const Feed = () => {
         <div className='p-4 space-y-6'>
 
           {/* Post List */}
-          {FeedData.map((post) => (
-            <PostCard key={post._id} post={post} />
-          ))}
+          {FeedData && FeedData.length > 0 ? (
+            FeedData.map((post) => (
+              <PostCard key={post._id} post={post} />
+            ))
+          ) : (
+            <div className='text-center text-gray-500 py-8'>
+              <p>No posts yet. Start following people or create your first post!</p>
+            </div>
+          )}
         </div>
       </div>
 

@@ -21,6 +21,25 @@ const postSchema = new mongoose.Schema({
         type: String, 
         ref: 'User'
     }],
+    comments: [{
+        user: {
+            type: String,
+            ref: 'User',
+            required: true
+        },
+        text: {
+            type: String,
+            required: true
+        },
+        createdAt: {
+            type: Date,
+            default: Date.now
+        }
+    }],
+    shares_count: {
+        type: Number,
+        default: 0
+    }
 }, {
     timestamps: true,
     minimize: false
