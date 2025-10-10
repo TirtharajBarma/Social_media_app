@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Copy, MessageCircle, Mail, Link as LinkIcon } from 'lucide-react';
+import { X, Copy, MessageCircle, Mail, Link as LinkIcon, Share2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useAuth } from '@clerk/clerk-react';
 import api from '../api/axios';
@@ -16,6 +16,36 @@ const ShareModal = ({ post, onClose, onShareComplete }) => {
     const handleShare = async (platform) => {
         setSharing(true);
         try {
+            // For mobile, use native share if available
+            if (platform === 'native' && navigator.share) {
+                try {
+                    await navigator.share({
+                        title: `Post by ${post.user.username}`,
+                        text: shareText,
+                        url: postUrl
+                    });
+                    
+                    // Track the share after successful native share
+                    await api.post('/api/post/share', {
+                        postId: post._id
+                    }, {
+                        headers: {
+                            Authorization: `Bearer ${await getToken()}`
+                        }
+                    });
+                    
+                    toast.success('Shared successfully!');
+                    setTimeout(onClose, 1000);
+                    return;
+                } catch (shareError) {
+                    if (shareError.name !== 'AbortError') {
+                        console.error('Share error:', shareError);
+                    }
+                    setSharing(false);
+                    return;
+                }
+            }
+
             // Track the share
             const { data } = await api.post('/api/post/share', {
                 postId: post._id
@@ -34,23 +64,49 @@ const ShareModal = ({ post, onClose, onShareComplete }) => {
                 switch (platform) {
                     case 'copy':
                         try {
-                            await navigator.clipboard.writeText(postUrl);
-                            toast.success('Link copied to clipboard!');
-                        } catch (clipboardError) {
-                            // Fallback for older browsers or when clipboard API fails
-                            const textArea = document.createElement('textarea');
-                            textArea.value = postUrl;
-                            textArea.style.position = 'fixed';
-                            textArea.style.left = '-999999px';
-                            document.body.appendChild(textArea);
-                            textArea.select();
-                            try {
-                                document.execCommand('copy');
+                            // iOS Safari requires a specific approach
+                            if (navigator.clipboard && window.isSecureContext) {
+                                await navigator.clipboard.writeText(postUrl);
                                 toast.success('Link copied to clipboard!');
-                            } catch (err) {
-                                toast.error('Failed to copy link');
+                            } else {
+                                // Fallback for iOS and older browsers
+                                const textArea = document.createElement('textarea');
+                                textArea.value = postUrl;
+                                // Make the textarea out of viewport but still selectable
+                                textArea.style.position = 'fixed';
+                                textArea.style.left = '-999999px';
+                                textArea.style.top = '-999999px';
+                                textArea.style.opacity = '0';
+                                textArea.setAttribute('readonly', '');
+                                document.body.appendChild(textArea);
+                                
+                                // iOS requires different selection method
+                                if (navigator.userAgent.match(/ipad|iphone/i)) {
+                                    const range = document.createRange();
+                                    range.selectNodeContents(textArea);
+                                    const selection = window.getSelection();
+                                    selection.removeAllRanges();
+                                    selection.addRange(range);
+                                    textArea.setSelectionRange(0, 999999);
+                                } else {
+                                    textArea.select();
+                                }
+                                
+                                try {
+                                    const successful = document.execCommand('copy');
+                                    if (successful) {
+                                        toast.success('Link copied to clipboard!');
+                                    } else {
+                                        toast.error('Failed to copy link');
+                                    }
+                                } catch (err) {
+                                    toast.error('Failed to copy link');
+                                }
+                                document.body.removeChild(textArea);
                             }
-                            document.body.removeChild(textArea);
+                        } catch (clipboardError) {
+                            console.error('Clipboard error:', clipboardError);
+                            toast.error('Failed to copy link');
                         }
                         break;
                     case 'twitter':
@@ -97,6 +153,23 @@ const ShareModal = ({ post, onClose, onShareComplete }) => {
 
                 {/* Share Options */}
                 <div className="p-6 space-y-3">
+                    {/* Native Share (Mobile Only) */}
+                    {navigator.share && (
+                        <button
+                            onClick={() => handleShare('native')}
+                            disabled={sharing}
+                            className="w-full flex items-center gap-4 p-4 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition disabled:opacity-50 border-2 border-indigo-300"
+                        >
+                            <div className="p-2 bg-indigo-500 rounded-full">
+                                <Share2 className="w-5 h-5 text-white" />
+                            </div>
+                            <div className="text-left">
+                                <div className="font-semibold text-indigo-700">Share via...</div>
+                                <div className="text-sm text-indigo-600">Use your device's share menu</div>
+                            </div>
+                        </button>
+                    )}
+
                     <button
                         onClick={() => handleShare('copy')}
                         disabled={sharing}
