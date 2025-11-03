@@ -10,6 +10,8 @@ node_modules/
 */.env
 */.env.*
 
+.vscode
+
 # Ansible secrets
 infra/ansible/secrets.yml
 infra/ansible/.vault-pass

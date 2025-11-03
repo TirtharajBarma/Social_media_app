@@ -1,0 +1,2 @@
+[servers]
+app_server ansible_host={{EC2_IP}} ansible_user=ubuntu

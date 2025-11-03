@@ -1,2 +1,2 @@
 [servers]
-app_server ansible_host=13.233.253.238 ansible_user=ubuntu
+app_server ansible_host=15.206.148.173 ansible_user=ubuntu

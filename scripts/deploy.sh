@@ -13,13 +13,25 @@ fi
 cd infra/terraform
 terraform init
 terraform apply -auto-approve
+
+if [ $? -ne 0 ]; then
+    echo "❌ Terraform apply failed!"
+    exit 1
+fi
+
 EC2_IP=$(terraform output -raw app_ip)
+echo "📍 New EC2 IP: $EC2_IP"
 
 # 2. Ansible
 cd ../ansible
-sed -i "s/YOUR_EC2_IP/$EC2_IP/g" inventory.yml
+echo "🔄 Creating fresh inventory with IP: $EC2_IP"
+rm -f inventory.yml
+sed "s/{{EC2_IP}}/$EC2_IP/g" inventory_template.yml > inventory.yml
+
+echo "⏳ Waiting 60 seconds for EC2 instance to be ready..."
 sleep 60
 
-ansible-playbook -i inventory.yml playbook.yml --private-key ~/.ssh/key.pem
+echo "🔧 Running Ansible playbook..."
+ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook -i inventory.yml playbook.yml --private-key ~/.ssh/key.pem
 
 echo "✅ Done! App at: http://$EC2_IP"

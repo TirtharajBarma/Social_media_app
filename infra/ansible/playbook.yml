@@ -38,17 +38,46 @@
           SMTP_PASS={{ smtp_pass }}
           PORT=4000
         dest: /home/ubuntu/app/server/.env
+        owner: ubuntu
+        group: ubuntu
         mode: '0600'
 
     - name: Create frontend .env.production
       copy:
         content: |
           VITE_CLERK_PUBLISHABLE_KEY={{ clerk_public }}
-          VITE_BASE_URL=http://{{ ansible_host }}:4000
+          VITE_BASE_URL=http://{{ ansible_host }}
         dest: /home/ubuntu/app/client/.env.production
 
-    - name: Build frontend
-      shell: cd /home/ubuntu/app/client && npm run build
+    - name: Fix client directory ownership before build
+      file:
+        path: /home/ubuntu/app/client
+        owner: ubuntu
+        group: ubuntu
+        recurse: yes
+
+    - name: Clean and build frontend
+      shell: |
+        cd /home/ubuntu/app/client
+        rm -rf dist node_modules/.vite
+        npm run build
+      become_user: ubuntu
+
+    - name: Fix directory permissions for nginx
+      file:
+        path: "{{ item }}"
+        mode: '0755'
+        state: directory
+      loop:
+        - /home/ubuntu
+        - /home/ubuntu/app
+        - /home/ubuntu/app/client
+        - /home/ubuntu/app/client/dist
+
+    - name: Fix frontend dist permissions
+      shell: |
+        chmod -R 755 /home/ubuntu/app/client/dist
+        chown -R www-data:www-data /home/ubuntu/app/client/dist
 
     - name: Configure Nginx
       copy:
@@ -68,6 +97,11 @@
                   proxy_set_header X-Real-IP $remote_addr;
                   proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
                   proxy_set_header X-Forwarded-Proto $scheme;
+                  proxy_set_header Connection '';
+                  proxy_http_version 1.1;
+                  chunked_transfer_encoding off;
+                  proxy_buffering off;
+                  proxy_cache off;
               }
           }
         dest: /etc/nginx/sites-available/default
@@ -80,6 +114,7 @@
     - name: Start backend with PM2
       shell: |
         cd /home/ubuntu/app/server
+        pm2 delete all || true
         pm2 start npm --name "chattrix-backend" -- start
         pm2 save
       become_user: ubuntu

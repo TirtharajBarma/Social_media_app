@@ -7,7 +7,7 @@ resource "aws_instance" "app_server" {
   ami           = "ami-0dee22c13ea7a9a67"
   instance_type = "t2.micro"
   key_name      = "key"
-  security_groups = ["allow-web"]
+  security_groups = [aws_security_group.allow_web.name]
 
   tags = {
     Name = "FullStackApp"
