@@ -86,7 +86,15 @@ const Profile = () => {
           {/* list of posts */}
           {active === 'post' && (
             <div className='mt-6 flex flex-col items-center gap-6'>
-              {posts.map((post) => <PostCard key={post._id} post={post} />)}
+              {posts.map((post) => (
+                <PostCard 
+                  key={post._id} 
+                  post={post} 
+                  onPostDeleted={(deletedPostId) => {
+                    setPosts(posts.filter(p => p._id !== deletedPostId));
+                  }}
+                />
+              ))}
             </div>
           )}
 

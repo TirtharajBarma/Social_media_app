@@ -50,7 +50,13 @@ const Feed = () => {
           {/* Post List */}
           {FeedData && FeedData.length > 0 ? (
             FeedData.map((post) => (
-              <PostCard key={post._id} post={post} />
+              <PostCard 
+                key={post._id} 
+                post={post} 
+                onPostDeleted={(deletedPostId) => {
+                  setFeedData(FeedData.filter(p => p._id !== deletedPostId));
+                }}
+              />
             ))
           ) : (
             <div className='text-center text-gray-500 py-8'>

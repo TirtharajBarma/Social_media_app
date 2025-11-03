@@ -86,22 +86,31 @@ export const likePost = async (req, res) => {
         const { userId } = await req.auth();
         const { postId } = req.body;
 
-        const post = await Post.findById(postId);
-        if (!post) {
+        // Basic validation
+        if (!postId) {
+            return res.json({ success: false, message: 'postId is required' });
+        }
+
+        const uid = String(userId);
+
+        // Ensure the post exists
+        const exists = await Post.exists({ _id: postId });
+        if (!exists) {
             return res.json({ success: false, message: 'Post not found' });
         }
 
-        // Check if the user has already liked the post
-        if (post.likes_count.includes(userId)) {
-            post.likes_count = post.likes_count.filter(id => id !== userId);
-            await post.save();
-            return res.json({ success: true, message: 'Post unliked successfully' });
-        } else {
-            post.likes_count.push(userId);
-            await post.save();
-        }
+        // Toggle like atomically to avoid casting issues and race conditions
+        const alreadyLiked = await Post.exists({ _id: postId, likes_count: uid });
 
-        res.json({ success: true, message: 'Post liked successfully' });
+        if (alreadyLiked) {
+            await Post.updateOne({ _id: postId }, { $pull: { likes_count: uid } });
+            const updated = await Post.findById(postId).select('likes_count');
+            return res.json({ success: true, message: 'Post unliked successfully', likes_count: updated?.likes_count?.length ?? 0 });
+        } else {
+            await Post.updateOne({ _id: postId }, { $addToSet: { likes_count: uid } });
+            const updated = await Post.findById(postId).select('likes_count');
+            return res.json({ success: true, message: 'Post liked successfully', likes_count: updated?.likes_count?.length ?? 0 });
+        }
 
     } catch (error) {
         console.error('Error liking post:', error);
@@ -211,6 +220,36 @@ export const sharePost = async (req, res) => {
 
     } catch (error) {
         console.error('Error sharing post:', error);
+        res.json({ success: false, message: error.message });
+    }
+};
+
+// delete post
+export const deletePost = async (req, res) => {
+    try {
+        const { userId } = await req.auth();
+        const { postId } = req.params;
+
+        const post = await Post.findById(postId);
+        if (!post) {
+            return res.json({ success: false, message: 'Post not found' });
+        }
+
+        // Check if the user owns the post
+        if (post.user.toString() !== userId) {
+            return res.json({ success: false, message: 'You can only delete your own posts' });
+        }
+
+        // Delete the post
+        await Post.findByIdAndDelete(postId);
+
+        res.json({ 
+            success: true, 
+            message: 'Post deleted successfully'
+        });
+
+    } catch (error) {
+        console.error('Error deleting post:', error);
         res.json({ success: false, message: error.message });
     }
 };

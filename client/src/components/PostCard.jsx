@@ -1,4 +1,4 @@
-import { Badge, BadgeCheck, Heart, MessageCircle, Share2 } from 'lucide-react'
+import { Badge, BadgeCheck, Heart, MessageCircle, Share2, MoreHorizontal, Trash2 } from 'lucide-react'
 import React from 'react'
 import moment from 'moment'
 import { useNavigate } from 'react-router-dom';
@@ -9,13 +9,15 @@ import toast from 'react-hot-toast';
 import CommentModal from './CommentModal';
 import ShareModal from './ShareModal';
 
-const PostCard = ({ post }) => {
+const PostCard = ({ post, onPostDeleted }) => {
 
     const [liked, setLiked] = React.useState(post.likes_count);
     const [commentCount, setCommentCount] = React.useState(post.comments?.length || 0);
     const [sharesCount, setSharesCount] = React.useState(post.shares_count || 0);
     const [showCommentModal, setShowCommentModal] = React.useState(false);
     const [showShareModal, setShowShareModal] = React.useState(false);
+    const [showDeleteMenu, setShowDeleteMenu] = React.useState(false);
+    const [isDeleting, setIsDeleting] = React.useState(false);
     const currentUser = useSelector((state) => state.user.value);  // redux
     const {getToken} = useAuth();
 
@@ -48,21 +50,97 @@ const PostCard = ({ post }) => {
 
     const navigate = useNavigate();
 
+    // Handle delete post
+    const handleDeletePost = async () => {
+        if (!window.confirm('Are you sure you want to delete this post?')) {
+            return;
+        }
+
+        setIsDeleting(true);
+        try {
+            const { data } = await api.delete(`/api/post/${post._id}`, {
+                headers: {
+                    Authorization: `Bearer ${await getToken()}`
+                }
+            });
+
+            if (data.success) {
+                toast.success('Post deleted successfully');
+                if (onPostDeleted) {
+                    onPostDeleted(post._id);
+                }
+            } else {
+                toast.error(data.message || 'Failed to delete post');
+            }
+        } catch (error) {
+            toast.error('Failed to delete post');
+            console.error('Delete post error:', error);
+        } finally {
+            setIsDeleting(false);
+            setShowDeleteMenu(false);
+        }
+    };
+
+    // Close delete menu when clicking outside
+    const handleClickOutside = (e) => {
+        if (showDeleteMenu && !e.target.closest('.delete-menu-container')) {
+            setShowDeleteMenu(false);
+        }
+    };
+
+    React.useEffect(() => {
+        if (showDeleteMenu) {
+            document.addEventListener('click', handleClickOutside);
+            return () => document.removeEventListener('click', handleClickOutside);
+        }
+    }, [showDeleteMenu]);
+
     // Highlight hashtags (only if content exists)
     const postWithHashtags = post.content ? post.content.replace(/#(\w+)/g, '<span class="text-indigo-500">#$1</span>') : '';
+
+    // Check if current user owns this post
+    const isOwner = currentUser && post.user._id === currentUser._id;
 
   return (
     <div className='bg-white rounded-xl shadow p-4 space-y-4 w-full max-w-2xl'>
         {/* userInfo */}
-        <div onClick={() => navigate('/profile/' + post.user._id)} className='inline-flex items-center gap-3 cursor-pointer'>
-            <img src={post.user.profile_picture} alt='' className='w-10 h-10 rounded-full shadow' />
-            <div>
-                <div className='flex items-center space-x-1'>
-                    <span>{post.user.full_name}</span>
-                    <BadgeCheck className='w-4 h-4 text-blue-500'/>
+        <div className='flex items-center justify-between'>
+            <div onClick={() => navigate('/profile/' + post.user._id)} className='inline-flex items-center gap-3 cursor-pointer'>
+                <img src={post.user.profile_picture} alt='' className='w-10 h-10 rounded-full shadow' />
+                <div>
+                    <div className='flex items-center space-x-1'>
+                        <span>{post.user.full_name}</span>
+                        <BadgeCheck className='w-4 h-4 text-blue-500'/>
+                    </div>
+                    <div className='text-gray-500 text-sm'>@{post.user.username} . {moment(post.createdAt).fromNow()}</div>
                 </div>
-                <div className='text-gray-500 text-sm'>@{post.user.username} . {moment(post.createdAt).fromNow()}</div>
             </div>
+
+            {/* Delete menu for post owner */}
+            {isOwner && (
+                <div className='relative delete-menu-container'>
+                    <button 
+                        onClick={() => setShowDeleteMenu(!showDeleteMenu)}
+                        className='p-2 hover:bg-gray-100 rounded-full transition-colors'
+                        disabled={isDeleting}
+                    >
+                        <MoreHorizontal className='w-5 h-5 text-gray-600' />
+                    </button>
+
+                    {showDeleteMenu && (
+                        <div className='absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[120px]'>
+                            <button
+                                onClick={handleDeletePost}
+                                disabled={isDeleting}
+                                className='flex items-center gap-2 w-full px-4 py-2 text-left text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50'
+                            >
+                                <Trash2 className='w-4 h-4' />
+                                {isDeleting ? 'Deleting...' : 'Delete'}
+                            </button>
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
 
         {/* content - text-input */}
