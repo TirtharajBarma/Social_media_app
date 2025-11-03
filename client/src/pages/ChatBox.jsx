@@ -28,7 +28,8 @@ const ChatBox = () => {
       const token = await getToken();
       dispatch(fetchMessages({token, userId}));
     } catch (error) {
-      toast.error('Error fetching messages:', error.message);
+      console.error('Error fetching messages:', error);
+      toast.error('Error fetching messages');
     }
   }, [userId, dispatch]);
 
@@ -58,7 +59,8 @@ const ChatBox = () => {
       }
 
     } catch (error) {
-      toast.error('Error sending message:', error.message);
+      console.error('Error sending message:', error);
+      toast.error('Error sending message');
     }
   };
 

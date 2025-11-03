@@ -30,7 +30,8 @@ const Feed = () => {
         toast.error(data.message);
       } 
     } catch (error) {
-      toast.error("Error fetching feed data:", error);
+      console.error('Error fetching feed data:', error);
+      toast.error('Error fetching feed data');
     } finally {
       setLoading(false);
     }

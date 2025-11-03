@@ -1,4 +1,4 @@
-import React, { Suspense, use, useRef } from 'react';
+import React, { Suspense, useRef, useEffect } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import Login from './pages/Login';
 import Feed from './pages/Feed';
@@ -12,7 +12,6 @@ import Discover from './pages/Discover';
 import CreatePost from './pages/CreatePost';
 import PostDetail from './pages/PostDetail';
 import toast, {Toaster} from 'react-hot-toast';
-import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
 import { fetchUser } from './features/user/userSlice';
 import { fetchConnections } from './features/connections/connectionSlice';

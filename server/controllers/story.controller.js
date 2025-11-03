@@ -52,11 +52,13 @@ export const addUserStory = async (req, res) => {
 // get user stories
 export const getUserStories = async (req, res) => {
     try {
-        const { userId } = await req.auth();
-        const user = await User.findById(userId);
+    const { userId } = await req.auth();
+    const user = await User.findById(userId);
 
-        // user connections and followings
-        const userIds = [userId, ...user.connection, ...user.following];
+    // user connections and followings with safety checks
+    const connections = user?.connection || [];
+    const following = user?.following || [];
+    const userIds = [userId, ...connections, ...following];
         const stories = await Story.find({ 
             user: { $in: userIds } 
         }).populate('user').sort({ createdAt: -1 });

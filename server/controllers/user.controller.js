@@ -1,4 +1,3 @@
-import { connect } from "http2";
 import imageKit from "../config/imageKit.js";
 import { inngest } from "../inngest/inngest.js";
 import Connection from "../models/connection.models.js";

@@ -10,13 +10,23 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-const sendEmail = async (to, subject, text) => {
+// Flexible helper: accept either (to, subject, html) or an options object { to, subject, html }
+const sendEmail = async (toOrOpts, subject, html) => {
     try {
+        let mail = {};
+        if (typeof toOrOpts === 'object' && toOrOpts !== null) {
+            mail.to = toOrOpts.to;
+            mail.subject = toOrOpts.subject;
+            mail.html = toOrOpts.html ?? toOrOpts.text;
+        } else {
+            mail.to = toOrOpts;
+            mail.subject = subject;
+            mail.html = html;
+        }
+
         const response = await transporter.sendMail({
             from: process.env.SENDER_EMAIL || '',
-            to,
-            subject,
-            html: text
+            ...mail
         });
         return response;
     } catch (error) {

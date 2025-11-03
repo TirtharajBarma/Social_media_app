@@ -29,7 +29,8 @@ const StoriesBar = () => {
                 toast.error(data.message || 'Failed to fetch stories');
             }
         } catch (error) {
-            toast.error('Error fetching stories:', error);
+            console.error('Error fetching stories:', error);
+            toast.error('Error fetching stories');
         }
     }
 
