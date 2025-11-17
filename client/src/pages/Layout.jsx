@@ -11,6 +11,14 @@ const Layout = () => {
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
 
+  // console.log('🏗️ Layout component render:', {
+  //   user: user?.username,
+  //   sidebarOpen,
+  //   windowWidth: window.innerWidth,
+  //   isMobile: window.innerWidth < 640,
+  //   userAgent: navigator.userAgent.includes('Mobile')
+  // });
+
   // Handle swipe gestures
   const handleTouchStart = (e) => {
     touchStartX.current = e.touches[0].clientX;
@@ -51,7 +59,21 @@ const Layout = () => {
       </div>
       {
   !sidebarOpen && 
-  <Menu className='fixed top-4 right-4 p-3 z-50 card-premium w-12 h-12 text-gray-600 sm:hidden cursor-pointer hover:text-gray-800 shadow-lg' onClick={() => setSidebarOpen(true)} />
+  <button 
+    className='fixed top-4 right-4 p-3 z-[60] card-premium w-12 h-12 text-gray-600 sm:hidden cursor-pointer hover:text-gray-800 shadow-lg' 
+    onClick={(e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setSidebarOpen(true);
+    }}
+    style={{ 
+      touchAction: 'manipulation',
+      minHeight: '48px',
+      minWidth: '48px'
+    }}
+  >
+    <Menu className='w-6 h-6' />
+  </button>
       }
     </div>
   ) : (
