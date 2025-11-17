@@ -21,7 +21,7 @@ const SideBar = ({sidebarOpen, setSidebarOpen}) => {
         />
       )}
       
-      <div className={`w-64 xl:w-80 card-premium flex-col justify-between items-center top-0 bottom-0 z-40 transform transition-all duration-300 ease-in-out m-4 sm:m-0 sm:rounded-none rounded-2xl hidden sm:flex fixed sm:relative ${sidebarOpen ? 'translate-x-0 !flex' : '-translate-x-full'}`}>
+      <div className={`w-64 xl:w-80 card-premium flex-col justify-between items-center top-0 bottom-0 z-40 transform transition-all duration-300 ease-in-out m-4 sm:m-0 sm:rounded-none rounded-2xl hidden sm:flex fixed sm:relative ${sidebarOpen ? 'translate-x-0 !flex' : '-translate-x-full sm:translate-x-0'}`}>
         <div className='w-full p-6 pt-8'>
             {/* Close button for mobile */}
             <div className='flex justify-end sm:hidden mb-4'>
