@@ -58,8 +58,8 @@ const CreatePost = () => {
     <div className='min-h-screen p-8' style={{ backgroundColor: '#F5EADF' }}>
       <div className='max-w-4xl mx-auto'>
         {/* title */}
-        <div className='mb-10 text-center'>
-          <h1 className='heading-display text-5xl mb-4 text-gray-800'>Share Your Story</h1>
+        <div className='mb-10 mt-16 sm:mt-0 text-center px-4'>
+          <h1 className='heading-display text-4xl sm:text-5xl lg:text-6xl mb-4 text-gray-800'>Share Your Story</h1>
           <p className='text-body text-xl text-gray-600'>What's inspiring you today?</p>
           <div className='w-24 h-px bg-gradient-to-r from-stone-400 to-transparent mx-auto mt-4'></div>
         </div>
