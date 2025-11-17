@@ -55,62 +55,86 @@ const CreatePost = () => {
   }
 
   return (
-    <div className='min-h-screen bg-gradient-to-b from-slate-50 to-white'>
-      <div className='max-w-6xl mx-auto p-6'>
+    <div className='min-h-screen p-8' style={{ backgroundColor: '#F5EADF' }}>
+      <div className='max-w-4xl mx-auto'>
         {/* title */}
-        <div className='mb-8'>
-          <h1 className='text-3xl font-bold text-slate-900 mb-2'>Create post</h1>
-          <p className=' text-slate-600'>Share your thoughts</p>
+        <div className='mb-10 text-center'>
+          <h1 className='heading-display text-5xl mb-4 text-gray-800'>Share Your Story</h1>
+          <p className='text-body text-xl text-gray-600'>What's inspiring you today?</p>
+          <div className='w-24 h-px bg-gradient-to-r from-stone-400 to-transparent mx-auto mt-4'></div>
         </div>
 
         {/* form */}
-        <div className='max-w-xl bg-white p-4 sm:p-8 sm:pb-3 rounded-xl shadow-md space-y-8'>
+        <div className='max-w-2xl mx-auto card-premium p-8 space-y-8'>
           {/* header */}
-          <div className='flex items-center gap-3'>
-            <img src={user.profile_picture} alt='Profile' className='w-12 h-12 rounded-full shadow' />
+          <div className='flex items-center gap-4'>
+            <div className='relative'>
+              <img src={user.profile_picture} alt='Profile' className='w-14 h-14 rounded-full shadow-lg' />
+              <div className='absolute -bottom-1 -right-1 w-5 h-5 bg-green-400 rounded-full border-2 border-white'></div>
+            </div>
             <div className=''>
-              <h2 className='font-semibold'>{user.full_name}</h2>
-              <p className='text-gray-600 text-sm'>@{user.username}</p>
+              <h2 className='font-semibold text-gray-800 text-lg'>{user.full_name}</h2>
+              <p className='text-gray-500'>@{user.username}</p>
             </div>
           </div>
 
           {/* text area */}
-          <textarea className='w-full resize-none max-h-20 mt-4 text-sm outline-none placeholder-gray-400' placeholder="What's on your mind?" onChange={(e) => setContent(e.target.value)} value={content} />
+          <div className='relative'>
+            <textarea 
+              className='w-full resize-none min-h-32 text-base outline-none placeholder-gray-400 bg-gray-50 p-4 rounded-2xl border-2 border-transparent focus:border-stone-300 focus:bg-white transition-all' 
+              placeholder="Share your thoughts, experiences, or what's on your mind..." 
+              onChange={(e) => setContent(e.target.value)} 
+              value={content} 
+            />
+          </div>
 
-
-            {/* images */}
-            {
-              image.length > 0 && <div className='flex flex-wrap gap-2 mt-4'>
+          {/* images */}
+          {
+            image.length > 0 && (
+              <div className='grid grid-cols-2 md:grid-cols-3 gap-4'>
                 {
                   image.map((img, index) => (
-                    <div className='relative group' key={index}>
-                      <img src={URL.createObjectURL(img)} alt='' className='h-20 rounded-md' />
-                      <div onClick={() => setImage(image.filter((_, i) => i !== index))} className='absolute hidden group-hover:flex justify-center items-center top-0 right-0 bottom-0 left-0 bg-black/40 rounded-md cursor-pointer'>
-                        <X className='w-6 h-6 text-white' />
+                    <div className='relative group card-premium p-2' key={index}>
+                      <img src={URL.createObjectURL(img)} alt='' className='w-full h-24 object-cover rounded-xl' />
+                      <div 
+                        onClick={() => setImage(image.filter((_, i) => i !== index))} 
+                        className='absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity'
+                      >
+                        <X className='w-4 h-4' />
                       </div>
                     </div>
                   ))
                 }
-                </div>
-            }
+              </div>
+            )
+          }
 
-            {/* bottom bar */}
-            {/* multiple attribute helps to upload multiple images */}
-            <div className='flex items-center justify-between pt-6 border-t border-gray-300'>
-              <label htmlFor="images" className='flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700 transition cursor-pointer'>
-                <Image className='size-6' />
-              </label>
-              <input type='file' id='images' accept='image/*' hidden multiple onChange={(e) => setImage([...image, ...e.target.files])} />
-              <button disabled={loading} onClick={(e) => toast.promise(handleSubmit(e), 
+          {/* bottom bar */}
+          <div className='flex items-center justify-between pt-6'>
+            <div className='w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent'></div>
+          </div>
+          
+          <div className='flex items-center justify-between'>
+            <label htmlFor="images" className='flex items-center gap-3 text-gray-600 hover:text-gray-800 transition cursor-pointer bg-gray-50 hover:bg-gray-100 px-4 py-3 rounded-2xl'>
+              <Image className='w-5 h-5' />
+              <span className='font-medium'>Add Photos</span>
+            </label>
+            <input type='file' id='images' accept='image/*' hidden multiple onChange={(e) => setImage([...image, ...e.target.files])} />
+            
+            <button 
+              disabled={loading} 
+              onClick={(e) => toast.promise(handleSubmit(e), 
                 {
-                  loading: 'Publishing...',
-                  success: 'Post published!',
+                  loading: 'Publishing your story...',
+                  success: 'Your post is now live!',
                   error: 'Failed to publish post.'
                 }
-              )} className='text-sm bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 active:scale-95 transition text-white font-medium px-8 py-2 rounded-md cursor-pointer'>
-                Publish Post
-              </button>
-            </div>
+              )} 
+              className='btn-primary px-8 py-3 text-white font-medium disabled:opacity-50 disabled:cursor-not-allowed'
+            >
+              {loading ? 'Publishing...' : 'Share Post'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

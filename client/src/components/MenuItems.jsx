@@ -5,16 +5,25 @@ import { Icon } from 'lucide-react'
 
 const MenuItems = ({setSidebarOpen}) => {
   return (
-    <div className='px-6 text-gray-600 space-y-1 font-medium'>
+    <div className='px-2 text-gray-700 space-y-2 font-medium'>
         {
             menuItemsData.map(({to, label, Icon}) => (
-                <NavLink key={to} to={to} end={to == '/'} onClick={() => setSidebarOpen(false)} className={({isActive}) => `px-3.5 py-2 flex items-center gap-3 rounded-xl ${isActive ? 'bg-indigo-50 text-indigo-700' : 'hover:bg-gray-50'}`}>
+                <NavLink 
+                    key={to} 
+                    to={to} 
+                    end={to == '/'} 
+                    onClick={() => setSidebarOpen(false)} 
+                    className={({isActive}) => `px-4 py-3 flex items-center gap-4 rounded-2xl transition-all duration-200 ${
+                        isActive 
+                            ? 'bg-stone-100 text-stone-800 shadow-sm border border-stone-200' 
+                            : 'hover:bg-stone-50 hover:shadow-sm text-gray-700'
+                    }`}
+                >
                     <Icon className='w-5 h-5' />
-                    {label}
+                    <span className='text-sm'>{label}</span>
                 </NavLink>
             ))
         }
-      
     </div>
   )
 }

@@ -57,30 +57,59 @@ const RecentMessages = () => {
     }, [user]);
 
     return (
-        <div className='bg-white max-w-xs mt-4 p-4 min-h-20 rounded-md shadow text-xs text-slate-800'>
-            <h3 className='font-semibold text-slate-8 mb-4'>Recent Messages</h3>
-            <div className='flex flex-col max-h-56 overflow-y-scroll no-scrollbar'>
+        <div className='card-premium p-6'>
+            <div className='flex items-center justify-between mb-5'>
+                <h3 className='heading-display text-xl text-gray-800'>Messages</h3>
+                <div className='w-6 h-px bg-gray-200'></div>
+            </div>
+            
+            <div className='space-y-1 max-h-72 overflow-y-auto no-scrollbar'>
                 {
                     Messages.map((message, index) => (
-                        <Link to={`/messages/${message.otherUser._id}`} key={index} className='flex items-start gap-2 py-2 hover:bg-slate-100'>
-                            <img src={message.otherUser.profile_picture} alt='' className='w-8 h-8 rounded-full' />
+                        <Link 
+                            to={`/messages/${message.otherUser._id}`} 
+                            key={index} 
+                            className='flex items-start gap-3 p-3 hover:bg-gray-50 rounded-xl transition-all group'
+                        >
+                            <div className='relative flex-shrink-0'>
+                                <img 
+                                    src={message.otherUser.profile_picture} 
+                                    alt='' 
+                                    className='w-11 h-11 rounded-full object-cover' 
+                                />
+                                {!message.seen && message.from_user_id._id !== user.id && (
+                                    <div className='absolute -top-0.5 -right-0.5 w-3.5 h-3.5 bg-stone-500 rounded-full border-2 border-white'></div>
+                                )}
+                            </div>
 
-                            <div className='w-full'>
-                                <div className='flex justify-between'>
-                                    <p className='font-medium'>{message.otherUser.full_name}</p>
-                                    <p className='text-[10px] text-slate-400'>{moment(message.createdAt).fromNow()}</p>
+                            <div className='flex-1 min-w-0 pt-0.5'>
+                                <div className='flex items-baseline justify-between mb-0.5'>
+                                    <h4 className='font-semibold text-gray-800 text-sm truncate pr-2 group-hover:text-gray-900'>
+                                        {message.otherUser.full_name}
+                                    </h4>
+                                    <span className='text-xs text-gray-400 flex-shrink-0'>
+                                        {moment(message.createdAt).fromNow()}
+                                    </span>
                                 </div>
-                                <div className='flex justify-between'>
-                                    <p className='text-gray-500'>
-                                        {message.from_user_id._id === user.id ? 'You: ' : ''}
-                                        {message.text ? message.text : "Media"}
-                                    </p>
-                                    {!message.seen && message.from_user_id._id !== user.id && <p className='bg-indigo-500 text-white w-4 h-4 flex items-center justify-center rounded-full text-[10px]'>1</p>}
-                                </div>
+                                <p className='text-xs text-gray-600 truncate leading-relaxed'>
+                                    {message.from_user_id._id === user.id && (
+                                        <span className='text-gray-500'>You: </span>
+                                    )}
+                                    {message.text || "📷 Photo"}
+                                </p>
                             </div>
                         </Link>
                     ))
                 }
+                {Messages.length === 0 && (
+                    <div className='text-center py-8'>
+                        <div className='w-12 h-12 bg-gray-100 rounded-full mx-auto mb-3 flex items-center justify-center'>
+                            <span className='text-lg'>💬</span>
+                        </div>
+                        <p className='text-gray-500 text-sm font-medium'>No conversations yet</p>
+                        <p className='text-gray-400 text-xs mt-1'>Start messaging your connections</p>
+                    </div>
+                )}
             </div>
         </div>
     )

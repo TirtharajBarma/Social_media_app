@@ -102,17 +102,20 @@ const PostCard = ({ post, onPostDeleted }) => {
     const isOwner = currentUser && post.user._id === currentUser._id;
 
   return (
-    <div className='bg-white rounded-xl shadow p-4 space-y-4 w-full max-w-2xl'>
+    <article className='card-premium p-6 space-y-5 w-full max-w-2xl'>
         {/* userInfo */}
-        <div className='flex items-center justify-between'>
-            <div onClick={() => navigate('/profile/' + post.user._id)} className='inline-flex items-center gap-3 cursor-pointer'>
-                <img src={post.user.profile_picture} alt='' className='w-10 h-10 rounded-full shadow' />
+        <header className='flex items-center justify-between'>
+            <div onClick={() => navigate('/profile/' + post.user._id)} className='inline-flex items-center gap-4 cursor-pointer group'>
+                <div className='relative'>
+                    <img src={post.user.profile_picture} alt='' className='w-12 h-12 rounded-full shadow-md' />
+                    <div className='absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white'></div>
+                </div>
                 <div>
-                    <div className='flex items-center space-x-1'>
-                        <span>{post.user.full_name}</span>
-                        <BadgeCheck className='w-4 h-4 text-blue-500'/>
+                    <div className='flex items-center space-x-2'>
+                        <span className='font-medium text-gray-800 group-hover:text-gray-900'>{post.user.full_name}</span>
+                        <BadgeCheck className='w-4 h-4 text-blue-600'/>
                     </div>
-                    <div className='text-gray-500 text-sm'>@{post.user.username} . {moment(post.createdAt).fromNow()}</div>
+                    <div className='text-gray-500 text-sm'>@{post.user.username} · {moment(post.createdAt).fromNow()}</div>
                 </div>
             </div>
 
@@ -121,18 +124,18 @@ const PostCard = ({ post, onPostDeleted }) => {
                 <div className='relative delete-menu-container'>
                     <button 
                         onClick={() => setShowDeleteMenu(!showDeleteMenu)}
-                        className='p-2 hover:bg-gray-100 rounded-full transition-colors'
+                        className='p-2 hover:bg-gray-50 rounded-full transition-colors'
                         disabled={isDeleting}
                     >
-                        <MoreHorizontal className='w-5 h-5 text-gray-600' />
+                        <MoreHorizontal className='w-5 h-5 text-gray-400 hover:text-gray-600' />
                     </button>
 
                     {showDeleteMenu && (
-                        <div className='absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-[120px]'>
+                        <div className='absolute right-0 top-full mt-2 card-premium min-w-[140px] py-2 z-10'>
                             <button
                                 onClick={handleDeletePost}
                                 disabled={isDeleting}
-                                className='flex items-center gap-2 w-full px-4 py-2 text-left text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50'
+                                className='flex items-center gap-3 w-full px-4 py-2 text-left text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50 rounded-lg mx-1'
                             >
                                 <Trash2 className='w-4 h-4' />
                                 {isDeleting ? 'Deleting...' : 'Delete'}
@@ -141,37 +144,42 @@ const PostCard = ({ post, onPostDeleted }) => {
                     )}
                 </div>
             )}
-        </div>
+        </header>
 
         {/* content - text-input */}
-        {post.content && <div className='text-gray-800 text-sm whitespace-pre-line' dangerouslySetInnerHTML={{ __html: postWithHashtags }} />}
+        {post.content && <div className='text-body text-base leading-relaxed whitespace-pre-line' dangerouslySetInnerHTML={{ __html: postWithHashtags }} />}
 
         {/* images */}
         {post.image_urls && post.image_urls.length > 0 && (
-            <div className='grid grid-cols-2 gap-2'>
+            <div className={`grid gap-3 ${post.image_urls.length === 1 ? 'grid-cols-1' : 'grid-cols-2'}`}>
                 {post.image_urls.map((url, index) => (
-                    <img key={index} src={url} alt='' className={`w-full h-48 object-cover rounded-lg ${post.image_urls.length === 1 ? 'col-span-2 h-auto' : ''}`} />
+                    <div key={index} className='relative overflow-hidden rounded-2xl group'>
+                        <img src={url} alt='' className={`w-full object-cover ${post.image_urls.length === 1 ? 'h-80' : 'h-48'}`} />
+                        <div className='absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors'></div>
+                    </div>
                 ))}
             </div>
         )}
 
         {/* post actions [like, comment, share] */}
-        <div className='flex items-center gap-4 text-gray-600 text-sm pt-2 border-t border-gray-300'>
+        <footer className='flex items-center gap-6 pt-4'>
+            <div className='w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-2'></div>
             
-            <div className='flex items-center gap-1 cursor-pointer hover:text-red-500 transition' onClick={handleLike}>
-                <Heart className={`w-4 h-4 ${currentUser && liked.includes(currentUser._id) && 'text-red-500 fill-red-500'}`} />
-                <span>{liked.length} Likes</span>
+            <div className='flex items-center gap-2 cursor-pointer group transition-all hover:bg-red-50 px-3 py-2 rounded-full' onClick={handleLike}>
+                <Heart className={`w-5 h-5 transition-colors ${currentUser && liked.includes(currentUser._id) ? 'text-red-500 fill-red-500' : 'text-gray-500 group-hover:text-red-500'}`} />
+                <span className='text-sm font-medium text-gray-600 group-hover:text-red-600'>{liked.length}</span>
             </div>
-            <div className='flex items-center gap-1 cursor-pointer hover:text-blue-500 transition' onClick={() => setShowCommentModal(true)}>
-                <MessageCircle className='w-4 h-4' />
-                <span>{commentCount} Comments</span>
+            
+            <div className='flex items-center gap-2 cursor-pointer group transition-all hover:bg-blue-50 px-3 py-2 rounded-full' onClick={() => setShowCommentModal(true)}>
+                <MessageCircle className='w-5 h-5 text-gray-500 group-hover:text-blue-500 transition-colors' />
+                <span className='text-sm font-medium text-gray-600 group-hover:text-blue-600'>{commentCount}</span>
             </div>
-            <div className='flex items-center gap-1 cursor-pointer hover:text-green-500 transition' onClick={() => setShowShareModal(true)}>
-                <Share2 className='w-4 h-4' />
-                <span>{sharesCount} Shares</span>
+            
+            <div className='flex items-center gap-2 cursor-pointer group transition-all hover:bg-green-50 px-3 py-2 rounded-full' onClick={() => setShowShareModal(true)}>
+                <Share2 className='w-5 h-5 text-gray-500 group-hover:text-green-500 transition-colors' />
+                <span className='text-sm font-medium text-gray-600 group-hover:text-green-600'>{sharesCount}</span>
             </div>
-
-        </div>
+        </footer>
 
         {/* Comment Modal */}
         {showCommentModal && (
@@ -191,7 +199,7 @@ const PostCard = ({ post, onPostDeleted }) => {
                 onShareComplete={(newShareCount) => setSharesCount(newShareCount)}
             />
         )}
-    </div>
+    </article>
   )
 }
 

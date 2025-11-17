@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useRef } from 'react'
 import { Outlet } from 'react-router-dom'
 import SideBar from '../components/SideBar'
 import { Menu, X } from 'lucide-react';
@@ -8,20 +8,50 @@ import { useSelector } from 'react-redux';
 const Layout = () => {
   const user = useSelector((state) => state.user.value);              // redux
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  const touchStartX = useRef(0);
+  const touchEndX = useRef(0);
+
+  // Handle swipe gestures
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchMove = (e) => {
+    touchEndX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = () => {
+    const swipeDistance = touchEndX.current - touchStartX.current;
+    const minSwipeDistance = 50;
+    
+    // Swipe right from left edge to open sidebar
+    if (swipeDistance > minSwipeDistance && touchStartX.current < 50) {
+      setSidebarOpen(true);
+    }
+    // Swipe left to close sidebar
+    else if (swipeDistance < -minSwipeDistance && sidebarOpen) {
+      setSidebarOpen(false);
+    }
+  };
 
   return user ? (
-    <div className='w-full flex h-screen'>
+    <div 
+      className='w-full flex h-screen' 
+      style={{ backgroundColor: '#F5EADF' }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
       
+      {/* Sidebar - responsive behavior handled within SideBar component */}
       <SideBar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
       
-      <div className='flex-1 bg-slate-50'>
+      <div className='flex-1 w-full' style={{ backgroundColor: '#F5EADF' }}>
         <Outlet />
       </div>
       {
-  sidebarOpen ? 
-  <X className='absolute top-3 right-3 p-2 z-50 bg-white rounded-md shadow w-10 h-10 text-gray-600 sm:hidden' onClick={() => setSidebarOpen(false)} /> 
-  :
-  <Menu className='absolute top-3 right-3 p-2 z-50 bg-white rounded-md shadow w-10 h-10 text-gray-600 sm:hidden' onClick={() => setSidebarOpen(true)} />
+  !sidebarOpen && 
+  <Menu className='fixed top-4 right-4 p-3 z-50 card-premium w-12 h-12 text-gray-600 sm:hidden cursor-pointer hover:text-gray-800 shadow-lg' onClick={() => setSidebarOpen(true)} />
       }
     </div>
   ) : (

@@ -9,41 +9,63 @@ const Messages = () => {
   const navigate = useNavigate();
 
   return (
-    <div className='min-h-screen relative bg-slate-50'>
-      <div className='max-w-6xl mx-auto p-6'>
+    <div className='min-h-screen p-4 sm:p-8' style={{ backgroundColor: '#F5EADF' }}>
+      <div className='max-w-4xl mx-auto'>
         {/* title */}
-        <div className='mb-8'>
-          <h1 className='text-3xl font-bold text-slate-900 mb-2'>Messages</h1>
-          <p>Talk to our friends</p>
+        <div className='mb-10 mt-16 sm:mt-0 text-center px-4'>
+          <h1 className='heading-display text-4xl sm:text-5xl lg:text-6xl mb-4 text-gray-800'>Conversations</h1>
+          <p className='text-body text-lg text-gray-600'>Connect and chat with your network</p>
+          <div className='w-20 h-px bg-gradient-to-r from-stone-400 to-transparent mx-auto mt-4'></div>
         </div>
 
         {/* message list */}
-        <div className='flex flex-col gap-3'>
+        <div className='grid gap-6 md:grid-cols-2'>
           {connections.map((user) => (
-            <div key={user._id} className='max-w-xl flex flex-wrap gap-5 p-6 bg-white shadow rounded-md'>
-              <img src={user.profile_picture} alt='' className='rounded-full size-12 mx-auto' />
-              <div className='flex-1'>
-                <p className='font-medium text-slate-700'>{user.full_name}</p>
-                <p className='text-slate-500'>@{user.username}</p>
-                <p className='text-sm text-gray-500'>{user.bio}</p>
+            <div key={user._id} className='card-premium p-6 hover:shadow-lg transition-shadow'>
+              <div className='flex items-start gap-4'>
+                <div className='relative'>
+                  <img src={user.profile_picture} alt='' className='w-14 h-14 rounded-full shadow-lg' />
+                  <div className='absolute -bottom-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white'></div>
+                </div>
+                
+                <div className='flex-1 min-w-0'>
+                  <h3 className='font-semibold text-gray-800 text-lg'>{user.full_name}</h3>
+                  <p className='text-gray-500 mb-2'>@{user.username}</p>
+                  <p className='text-sm text-gray-600 line-clamp-2 leading-relaxed'>
+                    {user.bio || 'No bio available'}
+                  </p>
+                </div>
               </div>
 
-              {/* icons */}
-              <div className='flex flex-col gap-2 mt-4'>
-
-                <button onClick={() => navigate(`/messages/${user._id}`)} className='size-10 flex items-center justify-center text-sm rounded bg-slate-100 hover:bg-slate-200 text-slate-800 active:scale-95 transition cursor-pointer gap-1'>
+              {/* Action buttons */}
+              <div className='flex gap-3 mt-6 pt-4 border-t border-gray-100'>
+                <button 
+                  onClick={() => navigate(`/messages/${user._id}`)} 
+                  className='flex-1 flex items-center justify-center gap-2 btn-primary text-white py-3 px-4 rounded-2xl font-medium'
+                >
                   <MessageSquare className='w-4 h-4'/>
+                  Message
                 </button>
 
-                <button onClick={() => navigate(`/profile/${user._id}`)} className='size-10 flex items-center justify-center text-sm rounded bg-slate-100 hover:bg-slate-200 text-slate-800 active:scale-95 transition cursor-pointer gap-1'>
+                <button 
+                  onClick={() => navigate(`/profile/${user._id}`)} 
+                  className='flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-4 rounded-2xl transition-colors'
+                >
                   <Eye className='w-4 h-4'/>
                 </button>
               </div>
             </div>
           ))}
+          
+          {connections.length === 0 && (
+            <div className='col-span-2 card-premium p-12 text-center'>
+              <MessageSquare className='w-16 h-16 text-gray-400 mx-auto mb-4' />
+              <h3 className='heading-display text-xl mb-2 text-gray-700'>No conversations yet</h3>
+              <p className='text-body'>Start connecting with people to begin chatting!</p>
+            </div>
+          )}
         </div>
       </div>
-      
     </div>
   )
 }

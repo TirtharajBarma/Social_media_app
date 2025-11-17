@@ -1,8 +1,7 @@
 import React from 'react'
-import { assets } from '../assets/assets'
 import { Link, useNavigate } from 'react-router-dom';
 import MenuItems from './MenuItems';
-import { CirclePlus, LogOut } from 'lucide-react';
+import { CirclePlus, LogOut, X } from 'lucide-react';
 import {UserButton, useClerk} from '@clerk/clerk-react'
 import { useSelector } from 'react-redux';
 
@@ -13,32 +12,51 @@ const SideBar = ({sidebarOpen, setSidebarOpen}) => {
     const {signOut} = useClerk();
 
   return (
-    <div className={`w-60 xl:w-72 bg-white border-r border-gray-200 flex flex-col justify-between items-center fixed left-0 sm:relative top-0 bottom-0 z-20 transform transition-all duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full sm:translate-x-0'}`}>
-        <div className='w-full'>
-            <img onClick={() => navigate('/')} src={assets.logo} className='cursor-pointer' alt=''  style={{ width: '150px', height: 'auto' }}  />
-            <hr className='border-gray-300 mb-8' />
+    <>
+      {/* Mobile overlay backdrop */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-30 sm:hidden" 
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+      
+      <div className={`w-64 xl:w-80 card-premium flex-col justify-between items-center top-0 bottom-0 z-40 transform transition-all duration-300 ease-in-out m-4 sm:m-0 sm:rounded-none rounded-2xl hidden sm:flex fixed sm:relative ${sidebarOpen ? 'translate-x-0 !flex' : '-translate-x-full'}`}>
+        <div className='w-full p-6 pt-8'>
+            {/* Close button for mobile */}
+            <div className='flex justify-end sm:hidden mb-4'>
+              <button 
+                onClick={() => setSidebarOpen(false)}
+                className='p-2 hover:bg-gray-100 rounded-full transition-colors'
+              >
+                <X className='w-5 h-5 text-gray-600' />
+              </button>
+            </div>
 
             <MenuItems setSidebarOpen={setSidebarOpen} />
 
-            <Link to='/create-post' className='flex items-center justify-center
-            gap-2 py-2.5 mt-6 mx-6 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-700 hover:to-purple-800 active:scale-95 transition text-white cursor-pointer'>
+            <Link to='/create-post' className='btn-primary flex items-center justify-center gap-3 py-3 mt-8 mx-2 text-white font-medium text-sm'>
                 <CirclePlus className='w-5 h-5' />
-                CreatePost
+                Create Post
             </Link>
         </div>
 
         {/* bottom username */}
-        <div className='w-full border-t border-gray-200 p-4 px-7 flex items-center justify-between'>
-            <div className='flex gap-2 items-center cursor-pointer'>
-                <UserButton />
-                <div>
-                    <h1 className='text-sm font-medium'>{user.full_name}</h1>
-                    <p className='text-xs text-gray-500'>@{user.username}</p>
+        <div className='w-full p-6 pt-4'>
+            <div className='w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-4'></div>
+            <div className='flex items-center justify-between'>
+                <div className='flex gap-3 items-center cursor-pointer'>
+                    <UserButton />
+                    <div>
+                        <h1 className='text-sm font-medium text-gray-800'>{user.full_name}</h1>
+                        <p className='text-xs text-gray-500'>@{user.username}</p>
+                    </div>
                 </div>
+                <LogOut className='w-5 h-5 text-gray-400 hover:text-gray-600 transition cursor-pointer p-1 hover:bg-gray-100 rounded-full' onClick={signOut} />
             </div>
-            <LogOut className='w-4.5 text-gray-400 hover:text-gray-700 transition cursor-pointer' onClick={signOut} />
         </div>
-    </div>
+      </div>
+    </>
   )
 }
 

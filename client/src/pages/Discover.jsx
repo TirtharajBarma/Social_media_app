@@ -44,35 +44,65 @@ const Discover = () => {
   }, [dispatch])
 
   return (
-    <div className='min-h-screen bg-gradient-to-b from-slate-50 to-white'>
-      <div className='max-w-6xl mx-auto p-6'>
+    <div className='min-h-screen p-4 sm:p-8' style={{ backgroundColor: '#F5EADF' }}>
+      <div className='max-w-6xl mx-auto'>
          
-         {/* title */}
-        <div className='mb-8'>
-          <h1 className='text-3xl font-bold text-slate-900 mb-2'>Discover People</h1>
-          <p>Connect with amazing people and grow your network</p>
+         {/* Hero Section */}
+        <div className='text-center mb-12 mt-16 sm:mt-0 px-4 sm:px-0'>
+          <h1 className='heading-display text-4xl sm:text-5xl lg:text-6xl mb-4 text-gray-800'>Discover Amazing People</h1>
+          <p className='text-body text-lg sm:text-xl text-gray-600 max-w-2xl mx-auto'>Connect with inspiring individuals and expand your professional network</p>
+          <div className='w-24 h-px bg-gradient-to-r from-stone-400 to-transparent mx-auto mt-6'></div>
         </div>
 
-        {/* search bar */}
-        <div className='mb-8 shadow-md rounded-md border border-slate-200/60 bg-white/80'>
-          <div className='p-6'>
+        {/* Enhanced Search Bar */}
+        <div className='mb-12 max-w-2xl mx-auto'>
+          <div className='card-premium p-2'>
             <div className='relative'>
-              <Search className='absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5' />
-              <input onChange={(e) => setInputValue(e.target.value)} value={inputValue} onKeyUp={handleSearch} type="text" name="" placeholder='Search people by name, username....' className='pl-10 sm:pl-12 py-2 w-full border border-gray-300 rounded-md max-sm:text-sm' id="" />
+              <Search className='absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5' />
+              <input 
+                onChange={(e) => setInputValue(e.target.value)} 
+                value={inputValue} 
+                onKeyUp={handleSearch} 
+                type="text" 
+                placeholder='Search people by name, username, or interests...' 
+                className='pl-12 pr-4 py-4 w-full bg-transparent border-none outline-none text-gray-800 placeholder-gray-500 text-lg'
+              />
             </div>
           </div>
+          <p className='text-center text-sm text-gray-500 mt-3'>Press Enter to search</p>
         </div>
 
-        {/* user section */}
-        <div className='flex flex-wrap gap-6'>
-          {users.map((user) => (
-            <UserCard key={user._id} user={user} />
-          ))}
-        </div>
+        {/* Results Section */}
+        {users.length > 0 && (
+          <div className='mb-8'>
+            <h2 className='heading-display text-2xl mb-6 text-gray-800'>Search Results</h2>
+            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
+              {users.map((user) => (
+                <UserCard key={user._id} user={user} />
+              ))}
+            </div>
+          </div>
+        )}
 
-        {
-          loading && (<Loading height='60vh' />)
-        }
+
+
+        {/* Loading State */}
+        {loading && (
+          <div className='flex justify-center py-12'>
+            <Loading height='auto' />
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!loading && users.length === 0 && inputValue === '' && (
+          <div className='text-center py-16'>
+            <div className='card-premium p-12 max-w-md mx-auto'>
+              <Search className='w-16 h-16 text-gray-400 mx-auto mb-4' />
+              <h3 className='heading-display text-xl mb-2 text-gray-700'>Start Discovering</h3>
+              <p className='text-body'>Use the search bar above to find amazing people to connect with</p>
+            </div>
+          </div>
+        )}
 
       </div>
     </div>

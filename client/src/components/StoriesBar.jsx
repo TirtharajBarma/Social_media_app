@@ -39,40 +39,42 @@ const StoriesBar = () => {
     }, []);
 
     return (
-        <div className='w-screen sm:w-[calc(100vw-240px)] lg:max-w-2xl no-scrollbar overflow-x-auto px-4'>
-            <div className='mb-3 flex items-center justify-between pr-12'>
-                <h2 className='text-lg font-semibold text-gray-800'>Stories</h2>
+        <div className='w-full max-w-2xl no-scrollbar overflow-x-auto px-4'>
+            <div className='mb-6 flex items-center justify-between'>
+                <h2 className='heading-display text-2xl text-gray-800'>Stories</h2>
+                <div className='w-16 h-px bg-gradient-to-r from-gray-300 to-transparent'></div>
             </div>
-            <div className='flex gap-4 pb-5'>
+            <div className='flex gap-5 pb-6'>
                 
                 {/* add story card */}
-                <div onClick={() => setShowModal(true)} className='rounded-lg shadow-sm min-w-30 max-w-30 max-h-40 aspect-[3/4] cursor-pointer hover:shadow-lg transition-all duration-200 border-2 border-dashed border-indigo-300 bg-gradient-to-b from-indigo-50 to-white'>
+                <div onClick={() => setShowModal(true)} className='card-premium min-w-32 max-w-32 h-44 aspect-[3/4] cursor-pointer group border-2 border-dashed border-stone-200 bg-stone-50'>
                     <div className='h-full flex flex-col items-center justify-center p-4'>
-                        <div className='size-10 bg-indigo-500 rounded-full flex items-center justify-center mb-3'>
+                        <div className='w-12 h-12 bg-stone-400 rounded-full flex items-center justify-center mb-3 group-hover:bg-stone-500 transition-colors'>
                             <Plus className='w-5 h-5 text-white' />
                         </div>
-                        <p className='text-sm font-medium text-slate-700 text-center'>Create a story</p>
+                        <p className='text-sm font-medium text-stone-700 text-center'>Add Story</p>
                     </div>
                 </div>
                 
                 {/* story cards */}
                 {
                     stories.map((story, index) => (
-                        <div onClick={() => setViewStory(story)} key={index} className={'relative rounded-lg shadow min-w-30 max-w-30 max-h-40 cursor-pointer hover:shadow-lg transition-all duration-200 bg-gradient-to-b from-indigo-500 to-purple-600 hover:from-indigo-700 hover:to-purple-800 active:scale-95'}>
-                            <img src={story.user.profile_picture} alt="" className='absolute size-8 top-3 left-3 z-10 rounded-full ring ring-gray-100 shadow' />
-                            <p className='absolute top-18 left-3 text-white/60 text-sm truncate max-w-24'>{story.content}</p>
-                            <p className='text-white absolute bottom-1 right-2 z-10 text-xs'>{moment(story.createdAt).fromNow()}</p>
+                        <div onClick={() => setViewStory(story)} key={index} className='relative card-premium min-w-32 max-w-32 h-44 cursor-pointer hover:opacity-90 group bg-gradient-to-br from-slate-800 to-slate-900 overflow-hidden'>
+                            <img src={story.user.profile_picture} alt="" className='absolute w-8 h-8 top-3 left-3 z-10 rounded-full ring-2 ring-white shadow-lg' />
+                            <p className='absolute top-16 left-3 text-white/80 text-xs truncate max-w-24 font-medium'>{story.content}</p>
+                            <p className='text-white/70 absolute bottom-3 left-3 z-10 text-xs'>{moment(story.createdAt).fromNow()}</p>
 
                             {/* used to render if it is image or videos */}
                             {
                                 story.media_type !== 'text' && (
-                                    <div className='absolute inset-0 z-1 rounded-lg bg-black overflow-hidden'>
+                                    <div className='absolute inset-0 z-0 rounded-2xl bg-black overflow-hidden'>
                                         {
                                         story.media_type === 'image' ?
-                                        <img src={story.media_url} alt='' className='h-full w-full object-cover hover:scale-100 transition duration-500 opacity-70 hover:opacity-80' />
+                                        <img src={story.media_url} alt='' className='h-full w-full object-cover opacity-80' />
                                         :
-                                        <video src={story.media_url} className='h-full w-full object-cover hover:scale-100 transition duration-500 opacity-70 hover:opacity-80' controls />
+                                        <video src={story.media_url} className='h-full w-full object-cover opacity-80' controls />
                                     }
+                                        <div className='absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/40'></div>
                                     </div>
                                 ) 
                             }
@@ -82,7 +84,6 @@ const StoriesBar = () => {
             </div>
 
             {/* add story modal here */}
-            {/* if true then this component will render -> add story card */}
             {showModal && <StoryModel setShowModal={setShowModal} fetchStories={fetchStories} />}
 
             {/* view story modal */}

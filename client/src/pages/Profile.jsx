@@ -53,14 +53,15 @@ const Profile = () => {
   }, [profileId, currentUser]);
 
   return user ? (
-    <div className='relative h-full overflow-y-scroll bg-gray-50 p-6'>
-      <div className='max-w-3xl mx-auto'>
+    <div className='relative h-full overflow-y-scroll p-4 sm:p-8' style={{ backgroundColor: '#F5EADF' }}>
+      <div className='max-w-4xl mx-auto mt-16 sm:mt-0'>
         
         {/* Profile card */}
-        <div className='bg-white rounded-2xl shadow overflow-hidden'>
+        <div className='card-premium overflow-hidden'>
           {/* cover photo */}
-          <div className='h-40 md:h-56 bg-gradient-to-r from-indigo-200 via-purple-200 to-pink-200'>
+          <div className='h-48 md:h-64 bg-gradient-to-br from-amber-200 via-orange-200 to-stone-300 relative'>
             {user.cover_photo && <img src={user.cover_photo} alt='Cover Photo' className='w-full h-full object-cover' />}
+            <div className='absolute inset-0 bg-gradient-to-t from-black/20 to-transparent'></div>
           </div>
 
           {/* user info */}
@@ -68,14 +69,16 @@ const Profile = () => {
         </div>
         
         {/* tabs */}
-        <div className='mt-6'>
-          <div className='bg-white rounded-xl shadow p-1 flex max-w-md mx-auto'>
+        <div className='mt-8'>
+          <div className='card-premium p-2 flex max-w-sm mx-auto'>
             {['post', 'media', 'about'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActive(tab)}
-                className={`flex-1 px-4 py-2 text-sm font-medium rounded-lg transition-colors cursor-pointer ${
-                  active === tab ? 'bg-indigo-600 text-white' : 'hover:text-gray-900 text-gray-900'
+                className={`flex-1 px-6 py-3 text-sm font-medium rounded-2xl transition-all cursor-pointer ${
+                  active === tab 
+                    ? 'bg-gray-700 text-white shadow-md' 
+                    : 'hover:bg-gray-50 text-gray-700 hover:text-gray-900'
                 }`}
               >
                 {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -85,33 +88,52 @@ const Profile = () => {
 
           {/* list of posts */}
           {active === 'post' && (
-            <div className='mt-6 flex flex-col items-center gap-6'>
-              {posts.map((post) => (
-                <PostCard 
-                  key={post._id} 
-                  post={post} 
-                  onPostDeleted={(deletedPostId) => {
-                    setPosts(posts.filter(p => p._id !== deletedPostId));
-                  }}
-                />
-              ))}
+            <div className='mt-8 flex flex-col items-center gap-8'>
+              {posts.length > 0 ? (
+                posts.map((post) => (
+                  <PostCard 
+                    key={post._id} 
+                    post={post} 
+                    onPostDeleted={(deletedPostId) => {
+                      setPosts(posts.filter(p => p._id !== deletedPostId));
+                    }}
+                  />
+                ))
+              ) : (
+                <div className='card-premium p-12 text-center max-w-md'>
+                  <h3 className='heading-display text-xl mb-2 text-gray-700'>No posts yet</h3>
+                  <p className='text-body'>This is where posts will appear when they're shared.</p>
+                </div>
+              )}
             </div>
           )}
 
           {/* list of media */}
           {active === 'media' && (
-            <div className='flex flex-wrap mt-6 max-w-6xl'>
+            <div className='mt-8 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'>
               {
-                posts.filter((post) => post.image_urls.length > 0).map((post) => (
-                  <>
-                    {post.image_urls.map((url, index) => (
-                      <Link target='_blank' to={url} key={index} className='relative group'>
-                        <img src={url} key={url} className='w-64 aspect-video object-cover' alt='' />
-                        <p className='absolute bottom-0 right-0 text-xs p-1 px-3 backdrop-blur-xl text-white opacity-0 group-hover:opacity-100 transition duration-300'>Posted {moment(post.createdAt).fromNow()}</p>
-                      </Link>
-                    ))}
-                  </>
-                ))}
+                posts.filter((post) => post.image_urls.length > 0).length > 0 ? (
+                  posts.filter((post) => post.image_urls.length > 0).map((post) => (
+                    <React.Fragment key={post._id}>
+                      {post.image_urls.map((url, index) => (
+                        <Link target='_blank' to={url} key={index} className='relative group card-premium overflow-hidden aspect-square'>
+                          <img src={url} className='w-full h-full object-cover' alt='' />
+                          <div className='absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300'>
+                            <p className='absolute bottom-3 left-3 text-white text-xs font-medium'>
+                              {moment(post.createdAt).fromNow()}
+                            </p>
+                          </div>
+                        </Link>
+                      ))}
+                    </React.Fragment>
+                  ))
+                ) : (
+                  <div className='col-span-full card-premium p-12 text-center'>
+                    <h3 className='heading-display text-xl mb-2 text-gray-700'>No media yet</h3>
+                    <p className='text-body'>Photos and videos will appear here when shared.</p>
+                  </div>
+                )
+              }
             </div>
           )}
         </div>
