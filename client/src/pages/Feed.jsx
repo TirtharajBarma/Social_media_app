@@ -17,9 +17,9 @@ const Feed = () => {
   // Dynamic greeting based on time
   const getGreeting = () => {
     const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 18) return 'Good afternoon';
-    return 'Good evening';
+    if (hour >= 5 && hour < 12) return 'Good morning';      // 5am - 12pm
+    if (hour >= 12 && hour < 17) return 'Good afternoon';   // 12pm - 5pm  
+    return 'Good evening';                                  // 5pm - 5am (17-23, 0-4)
   };
 
   const fetchFeedData = async () => {

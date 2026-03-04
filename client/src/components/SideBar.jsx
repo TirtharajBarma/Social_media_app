@@ -32,22 +32,26 @@ const SideBar = ({sidebarOpen, setSidebarOpen}) => {
           ${sidebarOpen ? 'flex sidebar-mobile' : 'hidden'} 
           sm:flex sm:sidebar-mobile-false
           fixed sm:relative
-          left-0 top-0 h-full
+          left-0 top-0 
+          h-full sm:h-screen
           w-64 xl:w-80 
           card-premium 
           flex-col justify-between
           z-[60]
           transition-all duration-300 ease-in-out 
-          m-4 sm:m-0 
+          m-3 sm:m-0 
           rounded-2xl sm:rounded-none
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} 
           sm:translate-x-0
+          max-h-screen
         `}
         onClick={(e) => {
           e.stopPropagation();
         }}
         style={{
-          pointerEvents: 'auto' // Ensure sidebar is interactive even with pointer-events-none overlay
+          pointerEvents: 'auto', // Ensure sidebar is interactive even with pointer-events-none overlay
+          maxHeight: '100vh',
+          maxWidth: 'calc(100vw - 1.5rem)' // Account for margins on mobile
         }}
       >
         <div className='w-full p-6 pt-8'>
@@ -100,13 +104,13 @@ const SideBar = ({sidebarOpen, setSidebarOpen}) => {
         </div>
 
         {/* bottom username */}
-        <div className='w-full p-6 pt-4'>
+        <div className='w-full p-4 sm:p-6 pt-4 flex-shrink-0'>
             <div className='w-full h-px bg-gradient-to-r from-transparent via-gray-200 to-transparent mb-4'></div>
             <div className='flex items-center justify-between'>
-                <div className='flex gap-3 items-center cursor-pointer'>
+                <div className='flex gap-3 items-center cursor-pointer min-w-0 flex-1'>
                     {/* Enhanced UserButton with touch handling */}
                     <div 
-                      className="relative"
+                      className="relative flex-shrink-0"
                       style={{ 
                         zIndex: 1001, 
                         position: 'relative',
@@ -136,9 +140,9 @@ const SideBar = ({sidebarOpen, setSidebarOpen}) => {
                       </span>
                     </div> */}
                     
-                    <div>
-                        <h1 className='text-sm font-medium text-gray-800'>{user.full_name}</h1>
-                        <p className='text-xs text-gray-500'>@{user.username}</p>
+                    <div className='min-w-0 flex-1'>
+                        <h1 className='text-sm font-medium text-gray-800 truncate'>{user.full_name}</h1>
+                        <p className='text-xs text-gray-500 truncate'>@{user.username}</p>
                     </div>
                 </div>
                 <button 
@@ -153,7 +157,7 @@ const SideBar = ({sidebarOpen, setSidebarOpen}) => {
                   onTouchEnd={(e) => {
                     e.stopPropagation();
                   }}
-                  className='p-1 hover:bg-gray-100 rounded-full transition-colors'
+                  className='p-2 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0'
                   style={{
                     minHeight: '44px',
                     minWidth: '44px',

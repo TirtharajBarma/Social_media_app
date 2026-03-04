@@ -4,9 +4,11 @@ import SideBar from '../components/SideBar'
 import { Menu, X } from 'lucide-react';
 import Loading from '../components/Loading';
 import { useSelector } from 'react-redux';
+import { useModal } from '../context/ModalContext';
 
 const Layout = () => {
   const user = useSelector((state) => state.user.value);              // redux
+  const { isEditProfileOpen } = useModal();
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
@@ -58,7 +60,7 @@ const Layout = () => {
         <Outlet />
       </div>
       {
-  !sidebarOpen && 
+  !sidebarOpen && !isEditProfileOpen && 
   <button 
     className='fixed top-4 right-4 p-3 z-[60] card-premium w-12 h-12 text-gray-600 sm:hidden cursor-pointer hover:text-gray-800 shadow-lg' 
     onClick={(e) => {

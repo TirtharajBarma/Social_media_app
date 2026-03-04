@@ -192,3 +192,21 @@
   color: var(--text-secondary);
   line-height: 1.6;
 }
+
+/* Mobile sidebar improvements */
+@media (max-width: 640px) {
+  .sidebar-mobile {
+    height: 100vh;
+    height: 100dvh; /* Use dynamic viewport height for better mobile support */
+    bottom: 0;
+    max-height: 100vh;
+    max-height: 100dvh;
+  }
+  
+  /* Ensure safe area handling on iOS */
+  @supports (padding: max(0px)) {
+    .sidebar-mobile {
+      padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    }
+  }
+}

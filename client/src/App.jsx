@@ -17,6 +17,7 @@ import { fetchUser } from './features/user/userSlice';
 import { fetchConnections } from './features/connections/connectionSlice';
 import { addMessage } from './features/messages/messageSlice';
 import Notification from './components/Notification';
+import { ModalProvider } from './context/ModalContext';
 
 const App = () => {
   const {user, isSignedIn} = useUser();
@@ -121,7 +122,7 @@ const App = () => {
   }, [user, dispatch]);
 
   return (
-    <>
+    <ModalProvider>
       <Toaster />
         <Routes>
           <Route path="/" element={!user ? <Login /> : <Layout />}>
@@ -136,7 +137,7 @@ const App = () => {
             <Route path="create-post" element={<CreatePost />} />
           </Route>
         </Routes>
-    </>
+    </ModalProvider>
   );
 }
 
